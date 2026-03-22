@@ -74,3 +74,72 @@ In short to sum up the relationship of the user with the IDS:
 * Create the auth system absend on the tools that Django provides and connect it to the frontend
 * Feel free to implement a type of middleware, like the one from redux, if it make the code easily expandable
 * take into account that this code will have to be expanded and should b easy to understand for non hardcore coders
+
+---
+
+# Implementation Summary
+
+## Backend (Django + DRF + JWT)
+
+**Project**: `backend/config/` — Django settings, CORS, JWT config, SQLite DB
+
+**Apps**:
+- **`accounts/`** — Custom `User` model with `profile_picture`, registration, login (JWT), `/api/auth/me/` endpoint
+- **`ids_core/`** — `IDS`, `Specification`, `IDSSpecification` models derived from `ids.xsd`, full CRUD ViewSets, search endpoint
+
+**API Endpoints**:
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/auth/register/` | Create account |
+| `POST /api/auth/login/` | JWT token pair |
+| `POST /api/auth/refresh/` | Refresh token |
+| `GET/PATCH /api/auth/me/` | User profile |
+| `GET /api/ids/` | Community IDSs |
+| `GET /api/ids/:id/` | IDS detail + specs |
+| `GET /api/ids/mine/` | User's IDSs |
+| `GET /api/specifications/` | Community specs |
+| `GET /api/specifications/mine/` | User's specs |
+| `GET /api/search/?q=` | Search both |
+
+**Seed data**: `python manage.py seed_data` — 3 users (alice/bob/carol, password: `Demo1234!`), 12 specifications, 6 IDSs
+
+---
+
+## Frontend (Vite + React + Redux Toolkit)
+
+**State management**: Redux Toolkit with RTK Query for all API calls, auto token refresh on 401
+
+**Pages** (matching README spec):
+
+| Page | Route | Component |
+|---|---|---|
+| MPU (Landing) | `/` | `LandingPage.jsx` |
+| LP (Login) | `/login` | `LoginPage.jsx` |
+| CAP (Register) | `/register` | `RegisterPage.jsx` |
+| MPL (Dashboard) | `/dashboard` | `DashboardPage.jsx` |
+| CSP (Community Specs) | `/specifications` | `CommunitySpecsPage.jsx` |
+| CIP (Community IDSs) | `/ids` | `CommunityIDSPage.jsx` |
+| IP (IDS Detail) | `/ids/:id` | `IDSPage.jsx` |
+| IE (Editor) | `/editor` | `IDSEditorPage.jsx` — placeholder |
+| UL (Library) | `/library` | `UserLibraryPage.jsx` |
+| UI (Profile) | `/profile` | `UserInfoPage.jsx` |
+
+**Key components**: `MainToolbar` (S/I/E/L/U buttons), `Layout` wrapper, `SpecificationModal`, `SearchBox`
+
+---
+
+## How to run
+
+```bash
+# Backend
+cd backend
+source ../venv/bin/activate.fish
+python manage.py runserver
+
+# Frontend (new terminal)
+cd frontend
+npm run dev
+```
+
+Frontend at `http://localhost:5173`, backend at `http://localhost:8000`. Login with `alice` / `Demo1234!` to see the dashboard with seeded data.
