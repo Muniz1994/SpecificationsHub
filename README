@@ -91,7 +91,7 @@ In short to sum up the relationship of the user with the IDS:
 
 | Endpoint | Description |
 |---|---|
-| `POST /api/auth/register/` | Create account |
+| `POST /api/auth/register/` | Create new account |
 | `POST /api/auth/login/` | JWT token pair |
 | `POST /api/auth/refresh/` | Refresh token |
 | `GET/PATCH /api/auth/me/` | User profile |
