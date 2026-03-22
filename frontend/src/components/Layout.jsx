@@ -20,7 +20,9 @@ export default function Layout() {
     <div className="flex min-h-screen">
       <MainToolbar />
       <main className="ml-14 flex-1 p-6 overflow-x-hidden">
-        <Outlet />
+        <div className="mx-auto w-full max-w-5xl">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
