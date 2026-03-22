@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 export default function SpecificationCard({ spec, onClick }) {
   return (
     <Card
-      className="min-w-[240px] max-w-[280px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
+      className="min-w-[400px] max-w-[550px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
       onClick={() => onClick && onClick(spec)}
     >
       <CardHeader className="pb-2">
