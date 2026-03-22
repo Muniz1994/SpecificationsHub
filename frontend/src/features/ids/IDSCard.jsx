@@ -18,7 +18,12 @@ export default function IDSCard({ ids }) {
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{ids.title}</CardTitle>
-        {ids.version && <Badge variant="secondary" className="w-fit">v{ids.version}</Badge>}
+        <div className="flex flex-wrap gap-1">
+          {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+          {ids.is_public === false && (
+            <Badge variant="outline" className="text-xs">Private</Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
@@ -28,6 +33,15 @@ export default function IDSCard({ ids }) {
               : ids.description
             : 'No description'}
         </p>
+        {ids.tags && ids.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {ids.tags.map((tag) => (
+              <Badge key={tag.id} variant="outline" className="text-xs">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between text-xs text-muted-foreground">
         {ids.owner_username && <span>by {ids.owner_username}</span>}

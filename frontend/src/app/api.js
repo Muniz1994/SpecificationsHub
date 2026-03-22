@@ -69,6 +69,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['IDS', 'Specification', 'User'],
+  tagTypes: ['IDS', 'Specification', 'User', 'Tag', 'Library'],
   endpoints: () => ({}), // endpoints are injected by feature slices
 });

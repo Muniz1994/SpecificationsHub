@@ -1,6 +1,7 @@
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -14,7 +15,12 @@ export default function SpecificationCard({ spec, onClick }) {
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{spec.name}</CardTitle>
-        <Badge variant="secondary" className="w-fit">{spec.ifc_version}</Badge>
+        <div className="flex flex-wrap gap-1">
+          <Badge variant="secondary">{spec.ifc_version}</Badge>
+          {spec.is_public === false && (
+            <Badge variant="outline" className="text-xs">Private</Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-2">
@@ -24,10 +30,21 @@ export default function SpecificationCard({ spec, onClick }) {
               : spec.description
             : 'No description'}
         </p>
-        {spec.owner_username && (
-          <p className="text-xs text-muted-foreground">by {spec.owner_username}</p>
+        {spec.tags && spec.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {spec.tags.map((tag) => (
+              <Badge key={tag.id} variant="outline" className="text-xs">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
         )}
       </CardContent>
+      {spec.owner_username && (
+        <CardFooter className="text-xs text-muted-foreground pt-0">
+          by {spec.owner_username}
+        </CardFooter>
+      )}
     </Card>
   );
 }
