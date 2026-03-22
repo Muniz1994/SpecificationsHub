@@ -1,7 +1,4 @@
-/**
- * Auth API endpoints (injected into the base api).
- */
-import { api } from '../../app/api';
+import { api } from '@/app/api';
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({

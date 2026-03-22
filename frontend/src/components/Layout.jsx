@@ -1,16 +1,9 @@
-/**
- * Layout — wraps all authenticated pages.
- *
- * Renders the MainToolbar on the left and the matched child route
- * (via <Outlet />) on the right.
- */
 import { Outlet } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import MainToolbar from './MainToolbar';
-import { useGetMeQuery } from '../features/auth/authApi';
-import { setUser, selectIsAuthenticated } from '../features/auth/authSlice';
-import './Layout.css';
+import MainToolbar from '@/components/MainToolbar';
+import { useGetMeQuery } from '@/features/auth/authApi';
+import { setUser, selectIsAuthenticated } from '@/features/auth/authSlice';
 
 export default function Layout() {
   const dispatch = useDispatch();
@@ -24,9 +17,9 @@ export default function Layout() {
   }, [user, dispatch]);
 
   return (
-    <div className="layout">
+    <div className="flex min-h-screen">
       <MainToolbar />
-      <main className="layout-content">
+      <main className="ml-14 flex-1 p-6 overflow-x-hidden">
         <Outlet />
       </main>
     </div>

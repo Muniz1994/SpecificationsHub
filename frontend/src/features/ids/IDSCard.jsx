@@ -1,34 +1,42 @@
-/**
- * IDSCard — displays a summary of a single IDS.
- * Clicking the card navigates to the IDS detail page.
- */
 import { useNavigate } from 'react-router-dom';
-import './IDSCard.css';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function IDSCard({ ids }) {
   const navigate = useNavigate();
 
   return (
-    <div className="ids-card" onClick={() => navigate(`/ids/${ids.id}`)}>
-      <h3 className="ids-card-title">{ids.title}</h3>
-      {ids.version && <span className="ids-card-version">v{ids.version}</span>}
-      <p className="ids-card-desc">
-        {ids.description
-          ? ids.description.length > 100
-            ? ids.description.slice(0, 100) + '…'
-            : ids.description
-          : 'No description'}
-      </p>
-      <div className="ids-card-footer">
-        {ids.owner_username && (
-          <span className="ids-card-author">by {ids.owner_username}</span>
-        )}
+    <Card
+      className="min-w-[260px] max-w-[300px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
+      onClick={() => navigate(`/ids/${ids.id}`)}
+    >
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">{ids.title}</CardTitle>
+        {ids.version && <Badge variant="secondary" className="w-fit">v{ids.version}</Badge>}
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          {ids.description
+            ? ids.description.length > 100
+              ? ids.description.slice(0, 100) + '…'
+              : ids.description
+            : 'No description'}
+        </p>
+      </CardContent>
+      <CardFooter className="flex justify-between text-xs text-muted-foreground">
+        {ids.owner_username && <span>by {ids.owner_username}</span>}
         {ids.specifications_count != null && (
-          <span className="ids-card-count">
+          <span>
             {ids.specifications_count} spec{ids.specifications_count !== 1 ? 's' : ''}
           </span>
         )}
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }

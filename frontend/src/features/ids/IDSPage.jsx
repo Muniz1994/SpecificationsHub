@@ -1,58 +1,61 @@
-/**
- * IDSPage (IP) — detail view for a single IDS.
- *
- * Shows general IDS information at the top, then a grid of
- * specification cards below. Clicking a spec card opens the
- * SpecificationModal.
- */
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetIDSDetailQuery } from './idsApi';
-import SpecificationCard from '../specifications/SpecificationCard';
-import SpecificationModal from '../specifications/SpecificationModal';
-import './IDSPage.css';
+import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import SpecificationCard from '@/features/specifications/SpecificationCard';
+import SpecificationModal from '@/features/specifications/SpecificationModal';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export default function IDSPage() {
   const { id } = useParams();
   const { data: ids, isLoading, error } = useGetIDSDetailQuery(id);
   const [selectedSpec, setSelectedSpec] = useState(null);
 
-  if (isLoading) return <p className="loading">Loading…</p>;
-  if (error) return <p className="error-msg">Failed to load IDS.</p>;
+  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (error) return <p className="text-destructive">Failed to load IDS.</p>;
   if (!ids) return null;
 
   return (
-    <div className="ids-page">
-      <header className="ids-page-header">
-        <h1>{ids.title}</h1>
-        {ids.version && <span className="ids-page-version">v{ids.version}</span>}
-      </header>
-
-      <div className="ids-page-info">
-        {ids.description && <p>{ids.description}</p>}
-
-        <div className="ids-page-meta">
-          {ids.author_email && (
-            <span><strong>Author:</strong> {ids.author_email}</span>
-          )}
-          {ids.date && (
-            <span><strong>Date:</strong> {ids.date}</span>
-          )}
-          {ids.purpose && (
-            <span><strong>Purpose:</strong> {ids.purpose}</span>
-          )}
-          {ids.milestone && (
-            <span><strong>Milestone:</strong> {ids.milestone}</span>
-          )}
-          {ids.copyright_text && (
-            <span><strong>Copyright:</strong> {ids.copyright_text}</span>
-          )}
-        </div>
+    <div className="max-w-4xl">
+      <div className="flex items-baseline gap-3 mb-4">
+        <h1 className="text-2xl font-bold">{ids.title}</h1>
+        {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
       </div>
 
-      <section className="ids-page-specs">
-        <h2>Specifications ({ids.specifications?.length || 0})</h2>
-        <div className="card-row">
+      <Card className="mb-8">
+        <CardContent className="pt-6 space-y-4">
+          {ids.description && (
+            <p className="text-sm text-muted-foreground">{ids.description}</p>
+          )}
+
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            {ids.author_email && (
+              <span><strong className="text-foreground">Author:</strong> {ids.author_email}</span>
+            )}
+            {ids.date && (
+              <span><strong className="text-foreground">Date:</strong> {ids.date}</span>
+            )}
+            {ids.purpose && (
+              <span><strong className="text-foreground">Purpose:</strong> {ids.purpose}</span>
+            )}
+            {ids.milestone && (
+              <span><strong className="text-foreground">Milestone:</strong> {ids.milestone}</span>
+            )}
+            {ids.copyright_text && (
+              <span><strong className="text-foreground">Copyright:</strong> {ids.copyright_text}</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-6" />
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">
+          Specifications ({ids.specifications?.length || 0})
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ids.specifications && ids.specifications.length > 0 ? (
             ids.specifications.map((spec) => (
               <SpecificationCard
@@ -62,7 +65,7 @@ export default function IDSPage() {
               />
             ))
           ) : (
-            <p className="empty">No specifications in this IDS.</p>
+            <p className="text-muted-foreground italic">No specifications in this IDS.</p>
           )}
         </div>
       </section>

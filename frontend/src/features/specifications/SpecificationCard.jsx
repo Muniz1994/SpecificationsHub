@@ -1,24 +1,33 @@
-/**
- * SpecificationCard — displays a summary of a single specification.
- * Clicking the card opens a modal with more details.
- */
-import './SpecificationCard.css';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function SpecificationCard({ spec, onClick }) {
   return (
-    <div className="spec-card" onClick={() => onClick && onClick(spec)}>
-      <h3 className="spec-card-title">{spec.name}</h3>
-      <span className="spec-card-version">{spec.ifc_version}</span>
-      <p className="spec-card-desc">
-        {spec.description
-          ? spec.description.length > 100
-            ? spec.description.slice(0, 100) + '…'
-            : spec.description
-          : 'No description'}
-      </p>
-      {spec.owner_username && (
-        <p className="spec-card-author">by {spec.owner_username}</p>
-      )}
-    </div>
+    <Card
+      className="min-w-[240px] max-w-[280px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
+      onClick={() => onClick && onClick(spec)}
+    >
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">{spec.name}</CardTitle>
+        <Badge variant="secondary" className="w-fit">{spec.ifc_version}</Badge>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-2">
+          {spec.description
+            ? spec.description.length > 100
+              ? spec.description.slice(0, 100) + '…'
+              : spec.description
+            : 'No description'}
+        </p>
+        {spec.owner_username && (
+          <p className="text-xs text-muted-foreground">by {spec.owner_username}</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

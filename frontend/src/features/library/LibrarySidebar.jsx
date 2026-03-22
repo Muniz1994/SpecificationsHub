@@ -1,30 +1,36 @@
-/**
- * LibrarySidebar — vertical list of the current user's IDSs.
- * Clicking an IDS triggers the onSelectIDS callback.
- */
-import './LibrarySidebar.css';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
   return (
-    <aside className="library-sidebar">
-      <h3 className="library-sidebar-title">My IDSs</h3>
+    <aside className="w-56 min-h-full shrink-0 border-r bg-card p-4">
+      <h3 className="text-sm font-semibold mb-3">My IDSs</h3>
+      <Separator className="mb-3" />
       {(!idsList || idsList.length === 0) && (
-        <p className="library-sidebar-empty">No IDSs yet.</p>
+        <p className="text-sm text-muted-foreground">No IDSs yet.</p>
       )}
-      <ul className="library-sidebar-list">
-        {idsList &&
-          idsList.map((ids) => (
-            <li
-              key={ids.id}
-              className={`library-sidebar-item ${
-                selectedId === ids.id ? 'active' : ''
-              }`}
-              onClick={() => onSelectIDS(ids.id)}
-            >
-              {ids.title}
-            </li>
-          ))}
-      </ul>
+      <ScrollArea className="h-[calc(100vh-160px)]">
+        <ul className="space-y-1">
+          {idsList &&
+            idsList.map((ids) => (
+              <li key={ids.id}>
+                <Button
+                  variant={selectedId === ids.id ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className={cn(
+                    'w-full justify-start text-left',
+                    selectedId === ids.id && 'font-medium'
+                  )}
+                  onClick={() => onSelectIDS(ids.id)}
+                >
+                  {ids.title}
+                </Button>
+              </li>
+            ))}
+        </ul>
+      </ScrollArea>
     </aside>
   );
 }

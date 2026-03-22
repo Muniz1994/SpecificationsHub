@@ -5,8 +5,8 @@
  * The store is the single source of truth for the entire app.
  */
 import { configureStore } from '@reduxjs/toolkit';
-import { api } from './api';
-import authReducer from '../features/auth/authSlice';
+import { api } from '@/app/api';
+import authReducer from '@/features/auth/authSlice';
 
 export const store = configureStore({
   reducer: {

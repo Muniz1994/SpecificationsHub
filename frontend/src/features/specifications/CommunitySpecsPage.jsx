@@ -1,11 +1,7 @@
-/**
- * CommunitySpecsPage (CSP) — full-page view of all community specifications.
- */
 import { useState } from 'react';
-import SpecificationCard from './SpecificationCard';
-import SpecificationModal from './SpecificationModal';
-import { useGetSpecificationsQuery } from './specificationsApi';
-import './CommunitySpecsPage.css';
+import SpecificationCard from '@/features/specifications/SpecificationCard';
+import SpecificationModal from '@/features/specifications/SpecificationModal';
+import { useGetSpecificationsQuery } from '@/features/specifications/specificationsApi';
 
 export default function CommunitySpecsPage() {
   const { data, isLoading } = useGetSpecificationsQuery();
@@ -14,14 +10,14 @@ export default function CommunitySpecsPage() {
   const specs = data?.results || [];
 
   return (
-    <div className="community-page">
-      <h1>Community Specifications</h1>
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Community Specifications</h1>
 
-      {isLoading && <p>Loading…</p>}
+      {isLoading && <p className="text-muted-foreground">Loading…</p>}
 
-      <div className="card-row">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {specs.length === 0 && !isLoading && (
-          <p className="empty">No specifications available.</p>
+          <p className="text-muted-foreground italic">No specifications available.</p>
         )}
         {specs.map((spec) => (
           <SpecificationCard

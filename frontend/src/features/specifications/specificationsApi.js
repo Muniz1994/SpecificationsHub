@@ -1,7 +1,4 @@
-/**
- * Specifications API endpoints (injected into the base api).
- */
-import { api } from '../../app/api';
+import { api } from '@/app/api';
 
 export const specificationsApi = api.injectEndpoints({
   endpoints: (builder) => ({

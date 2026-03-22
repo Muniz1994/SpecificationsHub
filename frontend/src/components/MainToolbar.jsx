@@ -1,43 +1,35 @@
-/**
- * MainToolbar — vertical left sidebar visible on all authenticated pages.
- *
- * Buttons:
- *   S → Community Specifications (CSP)
- *   I → Community IDSs (CIP)
- *   E → IDS Editor (IE)
- *   L → User Library (UL)
- *   U → Context menu with user info / logout
- */
-import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectCurrentUser } from '../features/auth/authSlice';
-import './MainToolbar.css';
+import { logout, selectCurrentUser } from '@/features/auth/authSlice';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { FileText, Layers, PenTool, Library, User, LogOut } from 'lucide-react';
 
 export default function MainToolbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const menuRef = useRef(null);
-
-  // Close the user menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setShowUserMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const buttons = [
-    { letter: 'S', path: '/specifications', title: 'Community Specifications' },
-    { letter: 'I', path: '/ids', title: 'Community IDSs' },
-    { letter: 'E', path: '/editor', title: 'IDS Editor' },
-    { letter: 'L', path: '/library', title: 'User Library' },
+    { icon: FileText, path: '/specifications', title: 'Community Specifications' },
+    { icon: Layers, path: '/ids', title: 'Community IDSs' },
+    { icon: PenTool, path: '/editor', title: 'IDS Editor' },
+    { icon: Library, path: '/library', title: 'User Library' },
   ];
 
   const handleLogout = () => {
@@ -46,42 +38,53 @@ export default function MainToolbar() {
   };
 
   return (
-    <nav className="main-toolbar">
-      <div className="toolbar-buttons">
+    <nav className="fixed top-0 left-0 z-50 flex h-screen w-14 flex-col items-center justify-between border-r bg-card py-3">
+      <div className="flex flex-col items-center gap-1">
         {buttons.map((btn) => (
-          <button
-            key={btn.letter}
-            className={`toolbar-btn ${location.pathname === btn.path ? 'active' : ''}`}
-            title={btn.title}
-            onClick={() => navigate(btn.path)}
-          >
-            {btn.letter}
-          </button>
+          <Tooltip key={btn.path}>
+            <TooltipTrigger asChild>
+              <Button
+                variant={location.pathname === btn.path ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => navigate(btn.path)}
+              >
+                <btn.icon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">{btn.title}</TooltipContent>
+          </Tooltip>
         ))}
       </div>
 
-      <div className="toolbar-user" ref={menuRef}>
-        <button
-          className="toolbar-btn user-btn"
-          title="User menu"
-          onClick={() => setShowUserMenu((prev) => !prev)}
-        >
-          U
-        </button>
-
-        {showUserMenu && (
-          <div className="user-menu">
+      <div className="flex flex-col items-center gap-1">
+        <ThemeToggle />
+        <Separator className="my-1 w-8" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <User className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="w-48">
             {user && (
-              <p className="user-menu-name">
-                {user.first_name} {user.last_name}
-              </p>
+              <>
+                <DropdownMenuLabel>
+                  {user.first_name} {user.last_name}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+              </>
             )}
-            <button onClick={() => { navigate('/profile'); setShowUserMenu(false); }}>
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <User className="mr-2 h-4 w-4" />
               Profile
-            </button>
-            <button onClick={handleLogout}>Log out</button>
-          </div>
-        )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </nav>
   );

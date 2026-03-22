@@ -1,16 +1,11 @@
-/**
- * UserLibraryPage (UL) — the user's personal library.
- *
- * Left sidebar lists the user's IDSs. Clicking one shows the IDS
- * detail (reuses IDSPage-style layout) on the right.
- */
 import { useState } from 'react';
-import LibrarySidebar from './LibrarySidebar';
-import { useGetMyIDSQuery } from '../ids/idsApi';
-import { useGetIDSDetailQuery } from '../ids/idsApi';
-import SpecificationCard from '../specifications/SpecificationCard';
-import SpecificationModal from '../specifications/SpecificationModal';
-import './UserLibraryPage.css';
+import LibrarySidebar from '@/features/library/LibrarySidebar';
+import { useGetMyIDSQuery, useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import SpecificationCard from '@/features/specifications/SpecificationCard';
+import SpecificationModal from '@/features/specifications/SpecificationModal';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 function IDSDetail({ idsId }) {
   const { data: ids, isLoading } = useGetIDSDetailQuery(idsId, {
@@ -18,36 +13,49 @@ function IDSDetail({ idsId }) {
   });
   const [selectedSpec, setSelectedSpec] = useState(null);
 
-  if (!idsId) return <p className="library-hint">Select an IDS from the sidebar.</p>;
-  if (isLoading) return <p>Loading…</p>;
+  if (!idsId)
+    return (
+      <p className="text-muted-foreground mt-10 text-center">
+        Select an IDS from the sidebar.
+      </p>
+    );
+  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (!ids) return null;
 
   return (
-    <div className="library-detail">
-      <header className="ids-page-header">
-        <h1>{ids.title}</h1>
-        {ids.version && <span className="ids-page-version">v{ids.version}</span>}
-      </header>
-
-      <div className="ids-page-info">
-        {ids.description && <p>{ids.description}</p>}
-        <div className="ids-page-meta">
-          {ids.author_email && <span><strong>Author:</strong> {ids.author_email}</span>}
-          {ids.date && <span><strong>Date:</strong> {ids.date}</span>}
-          {ids.purpose && <span><strong>Purpose:</strong> {ids.purpose}</span>}
-          {ids.milestone && <span><strong>Milestone:</strong> {ids.milestone}</span>}
-        </div>
+    <div className="max-w-4xl">
+      <div className="flex items-baseline gap-3 mb-4">
+        <h1 className="text-2xl font-bold">{ids.title}</h1>
+        {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
       </div>
 
-      <section className="ids-page-specs">
-        <h2>Specifications ({ids.specifications?.length || 0})</h2>
-        <div className="card-row">
+      <Card className="mb-6">
+        <CardContent className="pt-6 space-y-3">
+          {ids.description && (
+            <p className="text-sm text-muted-foreground">{ids.description}</p>
+          )}
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            {ids.author_email && <span><strong className="text-foreground">Author:</strong> {ids.author_email}</span>}
+            {ids.date && <span><strong className="text-foreground">Date:</strong> {ids.date}</span>}
+            {ids.purpose && <span><strong className="text-foreground">Purpose:</strong> {ids.purpose}</span>}
+            {ids.milestone && <span><strong className="text-foreground">Milestone:</strong> {ids.milestone}</span>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-6" />
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">
+          Specifications ({ids.specifications?.length || 0})
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {ids.specifications && ids.specifications.length > 0 ? (
             ids.specifications.map((spec) => (
               <SpecificationCard key={spec.id} spec={spec} onClick={setSelectedSpec} />
             ))
           ) : (
-            <p className="empty">No specifications.</p>
+            <p className="text-muted-foreground italic">No specifications.</p>
           )}
         </div>
       </section>
@@ -64,13 +72,13 @@ export default function UserLibraryPage() {
   const idsList = data?.results || data || [];
 
   return (
-    <div className="library-page">
+    <div className="flex min-h-[calc(100vh-48px)] -m-6">
       <LibrarySidebar
         idsList={idsList}
         selectedId={selectedIdsId}
         onSelectIDS={setSelectedIdsId}
       />
-      <div className="library-content">
+      <div className="flex-1 p-6">
         <IDSDetail idsId={selectedIdsId} />
       </div>
     </div>

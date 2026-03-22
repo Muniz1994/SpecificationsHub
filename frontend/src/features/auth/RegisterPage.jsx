@@ -1,10 +1,17 @@
-/**
- * RegisterPage (CAP) — basic create-account form.
- */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterMutation } from './authApi';
-import './AuthPages.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -31,7 +38,6 @@ export default function RegisterPage() {
     } catch (err) {
       const data = err?.data;
       if (data) {
-        // Flatten DRF validation errors
         const messages = Object.entries(data)
           .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
           .join(' | ');
@@ -43,77 +49,59 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2>Create Account</h2>
-        {error && <p className="auth-error">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <label>
-            Username
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <label>
-            First Name
-            <input
-              type="text"
-              name="first_name"
-              value={form.first_name}
-              onChange={handleChange}
-            />
-          </label>
-          <label>
-            Last Name
-            <input
-              type="text"
-              name="last_name"
-              value={form.last_name}
-              onChange={handleChange}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <label>
-            Confirm Password
-            <input
-              type="password"
-              name="password2"
-              value={form.password2}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <button type="submit" className="btn btn-primary" disabled={isLoading}>
-            {isLoading ? 'Creating…' : 'Register'}
-          </button>
-        </form>
-        <p className="auth-switch">
-          Already have an account? <Link to="/login">Log in</Link>
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription>Fill in your details to get started</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" name="username" type="text" value={form.username} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name</Label>
+                <Input id="first_name" name="first_name" type="text" value={form.first_name} onChange={handleChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input id="last_name" name="last_name" type="text" value={form.last_name} onChange={handleChange} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password2">Confirm Password</Label>
+              <Input id="password2" name="password2" type="password" value={form.password2} onChange={handleChange} required />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating…' : 'Register'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+              Log in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

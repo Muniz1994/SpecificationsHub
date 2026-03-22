@@ -1,9 +1,6 @@
-/**
- * ProtectedRoute — redirects to /login if the user is not authenticated.
- */
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectIsAuthenticated } from './authSlice';
+import { selectIsAuthenticated } from '@/features/auth/authSlice';
 
 export default function ProtectedRoute() {
   const isAuthenticated = useSelector(selectIsAuthenticated);

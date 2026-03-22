@@ -1,55 +1,65 @@
-/**
- * UserInfoPage (UI) — displays the current user's profile information.
- *
- * Shows: name, surname, email, profile picture.
- * Below: counts of IDSs and specifications created.
- */
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../auth/authSlice';
-import './UserInfoPage.css';
+import { selectCurrentUser } from '@/features/auth/authSlice';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 export default function UserInfoPage() {
   const user = useSelector(selectCurrentUser);
 
-  if (!user) return <p>Loading user info…</p>;
+  if (!user) return <p className="text-muted-foreground">Loading user info…</p>;
 
   return (
-    <div className="user-info-page">
-      <h1>My Profile</h1>
+    <div className="max-w-xl">
+      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
-      <div className="user-info-card">
-        <div className="user-info-avatar">
-          {user.profile_picture ? (
-            <img src={user.profile_picture} alt="Profile" />
-          ) : (
-            <div className="user-info-avatar-placeholder">
+      <Card className="mb-8">
+        <CardContent className="pt-6 flex items-start gap-6">
+          <Avatar className="h-20 w-20">
+            {user.profile_picture && (
+              <AvatarImage src={user.profile_picture} alt="Profile" />
+            )}
+            <AvatarFallback className="text-2xl font-semibold">
               {user.first_name?.[0] || user.username[0]}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="space-y-2">
+            <div className="text-sm">
+              <strong className="text-foreground">Name:</strong>{' '}
+              <span className="text-muted-foreground">{user.first_name || '—'}</span>
             </div>
-          )}
-        </div>
+            <div className="text-sm">
+              <strong className="text-foreground">Surname:</strong>{' '}
+              <span className="text-muted-foreground">{user.last_name || '—'}</span>
+            </div>
+            <div className="text-sm">
+              <strong className="text-foreground">Email:</strong>{' '}
+              <span className="text-muted-foreground">{user.email || '—'}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="user-info-details">
-          <div className="user-info-field">
-            <strong>Name:</strong> {user.first_name || '—'}
-          </div>
-          <div className="user-info-field">
-            <strong>Surname:</strong> {user.last_name || '—'}
-          </div>
-          <div className="user-info-field">
-            <strong>Email:</strong> {user.email || '—'}
-          </div>
-        </div>
-      </div>
+      <Separator className="my-6" />
 
-      <div className="user-info-stats">
-        <div className="stat-card">
-          <span className="stat-number">{user.ids_count ?? 0}</span>
-          <span className="stat-label">IDSs Created</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-number">{user.specifications_count ?? 0}</span>
-          <span className="stat-label">Specifications Created</span>
-        </div>
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <span className="block text-3xl font-bold text-primary">
+              {user.ids_count ?? 0}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">IDSs Created</span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <span className="block text-3xl font-bold text-primary">
+              {user.specifications_count ?? 0}
+            </span>
+            <span className="text-sm text-muted-foreground mt-1">Specifications Created</span>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

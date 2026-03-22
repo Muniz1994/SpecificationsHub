@@ -1,7 +1,4 @@
-/**
- * IDS API endpoints (injected into the base api).
- */
-import { api } from '../../app/api';
+import { api } from '@/app/api';
 
 export const idsApi = api.injectEndpoints({
   endpoints: (builder) => ({
