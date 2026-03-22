@@ -1,0 +1,76 @@
+# SpecificationsHUB
+
+Platform to share IDS and their specifications with the community
+
+## Feature
+
+- Create edit and upload IDSs
+- Controlled user authentication and user library (IDSs and specifications)
+- Create your IDSs getting the specifications shared from the community
+
+## Pages 
+
+- Main page (unlogged) (MPU)
+    * Page that describes the project. It has a horizontal layout: a) top bar with Logo at left and log in button and register button at the right. The log in button leads to the log in page and the register button leads to the register page.
+- Main page (logged) (MPL)
+    * The main page, when you are logged, is comprised of the main toolbar at left and the main section filling the right part of the page. The main section is comprised at the top by a searching box and the remaining space by 2 main sections: i) specifications section, where cards showing information about each specification is shown (the cards fill the container horizontally, being just one row of specifications); ii) IDSs sections, where cards showing IDSs information are shown, having the same layout as the specification page above. While the specification card open a modal showing more information per specification, the IDS card lead to a page (IP) showing more information about the IDS and the specifications it is comprised.
+- Community specifications page (CSP)
+    * This page is comprised of the main toolbar at left at left and the main section filling the right part of the page. cards showing information about each specification is shown (the cards fill the container horizontally, being just one row of specifications); The specification cards, when clicked open a modal showing more infomration bout the specification.
+- Community IDSs page (CIP)
+    * This page is comprised of the main toolbar at left at left and the main section filling the right part of the page. cards showing information about each IDS is shown (the cards fill the container horizontally, being just one row of IDSs); The IDS cards, when clicked open the respective IDS page (IP), with general information from the IDS and the specifications it is comprised for..
+- IDS page (IP)
+    * Besides the main toolbar at left, The IDS page comprise general inforamtion about the IDS and all the specifications it comprises. The specifications must be shown as cards, below the general information. The specification cards, when clicked, open a modal showing more information about the specification.
+- User Library (UL)
+    * Besides the main toolbar at the left, the user library has a vertical bar that present all the IDSs of the user. When the IDS are clicked it shows the IDS page (IP) at the right part of the page.
+- User information (UI)
+    * Besides the main toolbar at the left,  Show basic information about the user, such as: a) name; b) surname; c) email and d) profile picture. In a under section, show the amount of IDS and specifications created.
+- Log in page (LP)
+    * Basic default log in page
+- Create account page (CAP)
+    * Basic create account page
+- IDS editor (IE)
+    * For now, an empity page 
+
+
+## Notable components
+
+- Main toolbar
+    * left toolbar comprising the folowing buttons: 
+        a) "S" -> Leads to Community specifications (CSP)
+        b) "I" -> Leads to Community IDSs (CIP)
+        c) "E" -> Leads to IDS Editor (IE)
+        d) "L" -> Leads to User Library (UL)
+        e) "U" -> Open a context menu with user info
+
+    * This main toolbar has a vertical layout that is close by default, just showing the letters mensioned above.
+    * The toolbar appears left to every page except the unlogged main page.
+
+
+## Stack 
+
+For the frontend, the app should use  Vite (React)
+
+For teh backend, the app should use Django, with sqlite db
+
+To connect the backend to the frontend, the app must use Django REST framework.
+
+
+## Dummy initial db structure
+
+The dummy initial db structure that must be implemented should follow 2 main aspects:
+
+a) IDS and specifications element structure should come from the schema defined in the "ids.xsd" file
+b) Main user data needed to implement authentication and connection with the IDSs and their specifications
+
+In short to sum up the relationship of the user with the IDS: 
+    - the User can be associated with many specifications
+    - the User can be associated with many IDSs
+    - The IDS can be associated with manny specifications
+    - If a user is associated with IDSs, it is associated with its specifications, but it can be associated with the specifications directly
+
+# Further instructions 
+
+* Enable the connection of all architecture elements in a scalable way (frontend + backend)
+* Create the auth system absend on the tools that Django provides and connect it to the frontend
+* Feel free to implement a type of middleware, like the one from redux, if it make the code easily expandable
+* take into account that this code will have to be expanded and should b easy to understand for non hardcore coders

@@ -1,0 +1,75 @@
+/* UserInfoPage (UI) */
+.user-info-page {
+  max-width: 600px;
+}
+.user-info-page h1 {
+  margin-bottom: 24px;
+}
+
+.user-info-card {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.user-info-avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.user-info-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.user-info-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.user-info-field {
+  font-size: 0.95rem;
+}
+.user-info-field strong {
+  margin-right: 8px;
+}
+
+.user-info-stats {
+  display: flex;
+  gap: 16px;
+}
+.stat-card {
+  flex: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.stat-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}

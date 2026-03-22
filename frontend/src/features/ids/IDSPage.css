@@ -1,0 +1,39 @@
+/* IDSPage (IP) — detail view */
+.ids-page {
+  max-width: 900px;
+}
+.ids-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.ids-page-header h1 {
+  margin: 0;
+}
+.ids-page-version {
+  font-size: 0.85rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.ids-page-info {
+  margin-bottom: 32px;
+}
+.ids-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.ids-page-specs {
+  margin-top: 24px;
+}
+.ids-page-specs h2 {
+  margin-bottom: 16px;
+}
