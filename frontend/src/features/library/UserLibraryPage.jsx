@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from '@/components/ui/resizable';
 import LibrarySidebar from '@/features/library/LibrarySidebar';
 import { useGetMyIDSQuery, useGetIDSDetailQuery } from '@/features/ids/idsApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
@@ -72,15 +77,20 @@ export default function UserLibraryPage() {
   const idsList = data?.results || data || [];
 
   return (
-    <div className="flex min-h-[calc(100vh)] -m-6">
-      <LibrarySidebar
-        idsList={idsList}
-        selectedId={selectedIdsId}
-        onSelectIDS={setSelectedIdsId}
-      />
-      <div className="flex-1 p-6">
-        <IDSDetail idsId={selectedIdsId} />
-      </div>
-    </div>
+    <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh)] -m-6">
+      <ResizablePanel defaultSize={20} minSize={15} maxSize={25} data-panel>
+        <LibrarySidebar
+          idsList={idsList}
+          selectedId={selectedIdsId}
+          onSelectIDS={setSelectedIdsId}
+        />
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={80} minSize={75} maxSize={85} data-panel>
+        <div className="flex-1 p-6">
+          <IDSDetail idsId={selectedIdsId} />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }

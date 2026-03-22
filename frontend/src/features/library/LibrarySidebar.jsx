@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
   return (
-    <aside className="w-56 min-h-full shrink-0 border-r bg-card p-4">
+    <aside className="min-h-full shrink-0 border-r bg-card p-4">
       <h3 className="text-sm font-semibold mb-3">My IDSs</h3>
       <Separator className="mb-3" />
       {(!idsList || idsList.length === 0) && (
