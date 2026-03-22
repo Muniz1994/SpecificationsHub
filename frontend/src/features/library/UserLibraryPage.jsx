@@ -72,7 +72,7 @@ export default function UserLibraryPage() {
   const idsList = data?.results || data || [];
 
   return (
-    <div className="flex min-h-[calc(100vh-48px)] -m-6">
+    <div className="flex min-h-[calc(100vh)] -m-6">
       <LibrarySidebar
         idsList={idsList}
         selectedId={selectedIdsId}
