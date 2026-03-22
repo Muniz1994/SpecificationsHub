@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Specifications</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {specs.length === 0 && (
             <p className="text-muted-foreground italic">No specifications found.</p>
           )}
@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4">IDSs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {idsList.length === 0 && (
             <p className="text-muted-foreground italic">No IDSs found.</p>
           )}

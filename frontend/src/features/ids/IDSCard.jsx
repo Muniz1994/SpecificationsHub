@@ -13,7 +13,7 @@ export default function IDSCard({ ids }) {
 
   return (
     <Card
-      className="min-w-[400px] max-w-[550px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
+      className="min-w-[300px] max-w-[1000px] shrink-0 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
       onClick={() => navigate(`/ids/${ids.id}`)}
     >
       <CardHeader className="pb-2">
