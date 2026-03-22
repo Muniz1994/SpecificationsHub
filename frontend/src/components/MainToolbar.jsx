@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '@/features/auth/authSlice';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import reactLogo from '@/assets/logo.svg';
 import {
   Tooltip,
   TooltipContent,
@@ -39,7 +40,9 @@ export default function MainToolbar() {
 
   return (
     <nav className="fixed top-0 left-0 z-50 flex h-screen w-14 flex-col items-center justify-between border-r bg-card py-3">
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-4">
+        <img src={reactLogo} alt="Logo" className="h-8 w-8" />
+        <div className="flex flex-col items-center gap-1">
         {buttons.map((btn) => (
           <Tooltip key={btn.path}>
             <TooltipTrigger asChild>
@@ -54,6 +57,7 @@ export default function MainToolbar() {
             <TooltipContent side="right">{btn.title}</TooltipContent>
           </Tooltip>
         ))}
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-1">
