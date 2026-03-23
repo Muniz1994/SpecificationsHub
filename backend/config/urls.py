@@ -28,3 +28,5 @@ urlpatterns = [
 # Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Serve avatar assets
+    urlpatterns += static('/avatars/', document_root=settings.BASE_DIR / 'assets' / 'avatars')

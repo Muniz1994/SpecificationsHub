@@ -8,26 +8,68 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { TagList } from '@/components/TagPill';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useCopySpecificationToLibraryMutation } from '@/features/specifications/specificationsApi';
+import { ArrowUp, BadgeCheck } from 'lucide-react';
+import {
+  useCopySpecificationToLibraryMutation,
+  useEndorseSpecificationMutation,
+  useUnendorseSpecificationMutation,
+} from '@/features/specifications/specificationsApi';
+
+const AVATAR_COLORS = [
+  '#6b8e8e', // muted teal
+  '#8e6b6b', // muted rose
+  '#6b7a8e', // muted steel blue
+  '#8e856b', // muted sand
+  '#7a6b8e', // muted lavender
+  '#6b8e76', // muted sage
+  '#8e7a6b', // muted terracotta
+  '#6b848e', // muted slate
+  '#8e6b82', // muted mauve
+  '#768e6b', // muted olive
+];
+
+function getAvatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 export default function SpecificationCard({ spec, onClick, hideAddButton = false }) {
   const [copySpec, { isLoading: isCopying }] = useCopySpecificationToLibraryMutation();
+  const [endorse] = useEndorseSpecificationMutation();
+  const [unendorse] = useUnendorseSpecificationMutation();
   const [copied, setCopied] = useState(false);
 
   const handleGetIt = async (e) => {
     e.stopPropagation();
     try {
-      await copySpec(spec.id).unwrap();
+      await copySpec({ id: spec.id }).unwrap();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // silently ignore (e.g. already owned)
+    }
+  };
+
+  const handleEndorse = async (e) => {
+    e.stopPropagation();
+    try {
+      if (spec.is_endorsed) {
+        await unendorse(spec.id).unwrap();
+      } else {
+        await endorse(spec.id).unwrap();
+      }
+    } catch {
+      // ignore
     }
   };
   return (
@@ -53,18 +95,7 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
                 : spec.description
               : 'No description'}
           </p>
-          {spec.owner_username && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Avatar size="md" className="cursor-default">
-                  <AvatarFallback>
-                    {spec.owner_username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent>{spec.owner_username}</TooltipContent>
-            </Tooltip>
-          )}
+          <TagList tags={spec.tags} />
         </div>
         {!hideAddButton && (
           <Button
@@ -78,8 +109,43 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
         )}
       </CardContent>
       {spec.owner_username && (
-        <CardFooter className="text-xs text-muted-foreground pt-0">
-          by {spec.owner_username}
+        <CardFooter className="text-xs text-muted-foreground pt-0 flex justify-between items-center">
+          {spec.owner_username && (
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
+                    {spec.owner_avatar_url && (
+                      <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                    )}
+                    <AvatarFallback style={{ backgroundColor: getAvatarColor(spec.owner_username), color: '#fff' }}>
+                      {spec.owner_username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>{spec.owner_username}</TooltipContent>
+              </Tooltip>
+              {spec.owner_is_certified && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <BadgeCheck className="h-4 w-4 text-blue-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>Certified Creator</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1"
+            onClick={handleEndorse}
+          >
+            <ArrowUp className={`h-4 w-4 ${(spec.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'} ${spec.is_endorsed ? 'stroke-[3]' : ''}`} />
+            <span className={(spec.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'}>
+              {spec.endorsement_count ?? 0}
+            </span>
+          </Button>
         </CardFooter>
       )}
     </Card>

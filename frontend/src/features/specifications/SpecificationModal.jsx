@@ -1,11 +1,14 @@
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, CheckSquare, Filter } from 'lucide-react';
+import { Pencil, CheckSquare, Filter, X, BadgeCheck } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useGetSpecificationDetailQuery } from './specificationsApi';
 
 function FacetPill({ f }) {
   const label = f.type ? f.type.charAt(0).toUpperCase() + f.type.slice(1) : '?';
@@ -43,31 +46,41 @@ function FacetPanel({ title, icon: Icon, facets, emptyText }) {
   );
 }
 
-export default function SpecificationModal({ spec, onClose, onEdit }) {
+export default function SpecificationModal({ spec: specProp, onClose, onEdit }) {
+  const specId = specProp?.id;
+  const { data: fullSpec } = useGetSpecificationDetailQuery(specId, { skip: !specId });
+  const spec = fullSpec || specProp;
+
   const applicability = Array.isArray(spec?.applicability_data) ? spec.applicability_data : [];
   const requirements = Array.isArray(spec?.requirements_data) ? spec.requirements_data : [];
 
   return (
-    <Dialog open={!!spec} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-[60vw] sm:max-w-[95vw] w-[60vw] p-0 gap-0 max-h-[60vh] overflow-hidden">
+    <Dialog open={!!specProp} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent showCloseButton={false} className="max-w-[60vw] sm:max-w-[95vw] w-[60vw] p-0 gap-0 max-h-[60vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-6 px-6 pt-5 pb-4 border-b">
+          <div className="min-w-0 flex-1">
             <DialogTitle className="text-xl leading-tight">{spec?.name}</DialogTitle>
             <DialogDescription className="sr-only">Specification details</DialogDescription>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {spec?.ifc_version && <Badge variant="secondary">{spec.ifc_version}</Badge>}
               {spec?.is_public === false && <Badge variant="outline">Private</Badge>}
-              {spec?.tags?.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-              ))}
+              <TagList tags={spec?.tags} />
             </div>
           </div>
-          {onEdit && spec && (
-            <Button variant="outline" size="sm" className="shrink-0" onClick={() => onEdit(spec)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {onEdit && spec && (
+              <Button variant="outline" size="sm" onClick={() => onEdit(spec)}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+              </Button>
+            )}
+            <DialogClose asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </DialogClose>
+          </div>
         </div>
 
         {spec && (
@@ -91,9 +104,20 @@ export default function SpecificationModal({ spec, onClose, onEdit }) {
                 {spec.owner_username && (
                   <>
                     <Separator />
-                    <div className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">Owner: </span>
-                      {spec.owner_username}
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      {spec.owner_avatar_url && (
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                          <AvatarFallback className="text-[10px]">
+                            {spec.owner_username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium text-foreground">Owner: </span>
+                        {spec.owner_username}
+                        {spec.owner_is_certified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />}
+                      </span>
                     </div>
                   </>
                 )}

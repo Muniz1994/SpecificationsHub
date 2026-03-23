@@ -31,6 +31,10 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+
+    getAvatars: builder.query({
+      query: () => 'auth/avatars/',
+    }),
   }),
 });
 
@@ -39,4 +43,5 @@ export const {
   useRegisterMutation,
   useGetMeQuery,
   useUpdateMeMutation,
+  useGetAvatarsQuery,
 } = authApi;

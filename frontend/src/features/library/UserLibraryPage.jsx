@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
   ResizablePanelGroup,
@@ -17,6 +17,7 @@ import {
   useGetMySpecificationsQuery,
   useDeleteSpecificationMutation,
   useGetSpecificationDetailQuery,
+  useCopySpecificationToLibraryMutation,
 } from '@/features/specifications/specificationsApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
@@ -27,10 +28,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, Plus, Download } from 'lucide-react';
+import { Pencil, Plus, Download, Copy } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import TagManager from '@/components/TagManager';
+import { TagList } from '@/components/TagPill';
 
 function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
   const { data } = useGetMySpecificationsQuery();
@@ -102,12 +107,9 @@ function IDSDetail({ idsId, onRemove }) {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
-        {ids.tags && ids.tags.map((tag) => (
-          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-        ))}
         <div className="ml-auto flex gap-2">
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
             <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}
@@ -121,6 +123,9 @@ function IDSDetail({ idsId, onRemove }) {
             Remove from library
           </Button>
         </div>
+      </div>
+      <div className="mb-4">
+        <TagManager itemId={idsId} itemType="ids" currentTags={ids.tags || []} />
       </div>
 
       <Card className="mb-6">
@@ -185,22 +190,93 @@ function IDSDetail({ idsId, onRemove }) {
   );
 }
 
+function FacetDetail({ facet, index }) {
+  return (
+    <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs space-y-1">
+      <span className="font-semibold capitalize">{facet.type}</span>
+      {Object.entries(facet)
+        .filter(([k, v]) => k !== 'type' && k !== 'id' && v !== null && v !== undefined && v !== '')
+        .map(([k, v]) => (
+          <div key={k} className="flex gap-2 text-muted-foreground">
+            <span className="font-medium text-foreground/70 min-w-[100px]">{k.replace(/_/g, ' ')}:</span>
+            <span>{String(v)}</span>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+function DuplicateSpecDialog({ spec, open, onClose }) {
+  const [name, setName] = useState('');
+  const [copySpec, { isLoading }] = useCopySpecificationToLibraryMutation();
+
+  useEffect(() => {
+    if (open && spec) setName(`${spec.name} (copy)`);
+  }, [open, spec?.id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!spec?.id || !name.trim()) return;
+    try {
+      await copySpec({ id: spec.id, name: name.trim() }).unwrap();
+      onClose();
+    } catch (err) {
+      console.error('Failed to duplicate specification', err);
+      alert(`Failed to duplicate: ${err?.data?.detail || err?.status || 'Unknown error'}`);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Duplicate Specification</DialogTitle>
+          <DialogDescription>Enter a name for the copy.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="dup-name">Name</Label>
+            <Input
+              id="dup-name"
+              autoFocus
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="New specification name"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Duplicating…' : 'Duplicate'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function SpecificationDetail({ specId, onRemove }) {
   const { data: spec, isLoading } = useGetSpecificationDetailQuery(specId, { skip: !specId });
   const [showEdit, setShowEdit] = useState(false);
+  const [showDuplicate, setShowDuplicate] = useState(false);
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (!spec) return null;
 
+  const applicability = Array.isArray(spec.applicability_data) ? spec.applicability_data : [];
+  const requirements = Array.isArray(spec.requirements_data) ? spec.requirements_data : [];
+
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-bold">{spec.name}</h1>
         <Badge variant="secondary">{spec.ifc_version}</Badge>
-        {spec.tags && spec.tags.map((tag) => (
-          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-        ))}
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDuplicate(true)}>
+            <Copy className="h-3.5 w-3.5 mr-1" /> Duplicate
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
           </Button>
@@ -208,6 +284,9 @@ function SpecificationDetail({ specId, onRemove }) {
             Remove from library
           </Button>
         </div>
+      </div>
+      <div className="mb-4">
+        <TagManager itemId={specId} itemType="specification" currentTags={spec.tags || []} />
       </div>
 
       <Card className="mb-6">
@@ -226,33 +305,26 @@ function SpecificationDetail({ specId, onRemove }) {
 
       <Separator className="my-6" />
 
-      {spec.applicability_conditions && spec.applicability_conditions.length > 0 && (
+      {applicability.length > 0 && (
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">Applicability</h2>
           <div className="space-y-2">
-            {spec.applicability_conditions.map((cond) => (
-              <div key={cond.id} className="text-sm p-2 bg-muted rounded">
-                <strong>{cond.type}</strong>: {cond.key} {cond.operator} {cond.value}
-              </div>
-            ))}
+            {applicability.map((f, i) => <FacetDetail key={i} facet={f} />)}
           </div>
         </section>
       )}
 
-      {spec.requirements && spec.requirements.length > 0 && (
+      {requirements.length > 0 && (
         <section>
           <h2 className="text-xl font-semibold mb-3">Requirements</h2>
           <div className="space-y-2">
-            {spec.requirements.map((req) => (
-              <div key={req.id} className="text-sm p-2 bg-muted rounded">
-                <strong>{req.property_set}.{req.property_name}</strong> ({req.constraint_type}): {req.value}
-              </div>
-            ))}
+            {requirements.map((f, i) => <FacetDetail key={i} facet={f} />)}
           </div>
         </section>
       )}
 
       <SpecificationForm open={showEdit} onClose={() => setShowEdit(false)} initial={spec} />
+      <DuplicateSpecDialog spec={spec} open={showDuplicate} onClose={() => setShowDuplicate(false)} />
     </div>
   );
 }
@@ -297,7 +369,7 @@ export default function UserLibraryPage() {
   return (
     <>
       <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh)] -m-6">
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={25} data-panel>
+        <ResizablePanel defaultSize={25} minSize={25} maxSize={30} data-panel>
           <LibrarySidebar
             idsList={idsList}
             selectedId={selectedEntryId}
@@ -309,7 +381,7 @@ export default function UserLibraryPage() {
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={80} minSize={75} maxSize={85} data-panel>
+        <ResizablePanel defaultSize={75} minSize={70} maxSize={75} data-panel>
           <div className="flex-1 p-6">
             {selectedEntryId ? (
               <IDSDetail idsId={selectedEntryId} onRemove={handleRemoveIDS} />

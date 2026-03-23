@@ -4,6 +4,22 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
+AVATAR_CHOICES = None  # lazy-loaded
+
+
+def _get_avatar_filenames():
+    """Return the set of valid avatar filenames."""
+    import os
+    from django.conf import settings
+    avatars_dir = os.path.join(settings.BASE_DIR, 'assets', 'avatars')
+    try:
+        return {
+            f for f in os.listdir(avatars_dir)
+            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.svg', '.webp'))
+        }
+    except FileNotFoundError:
+        return set()
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Serializer for creating a new user account."""
@@ -33,9 +49,23 @@ class UserSerializer(serializers.ModelSerializer):
     """Read / update serializer for the current user."""
     ids_count = serializers.IntegerField(read_only=True)
     specifications_count = serializers.IntegerField(read_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'profile_picture', 'ids_count', 'specifications_count')
-        read_only_fields = ('id', 'username')
+                  'profile_picture', 'avatar', 'avatar_url',
+                  'is_certified', 'ids_count', 'specifications_count')
+        read_only_fields = ('id', 'username', 'is_certified', 'avatar_url')
+
+    def get_avatar_url(self, obj):
+        if obj.avatar:
+            return f'/avatars/{obj.avatar}'
+        return None
+
+    def validate_avatar(self, value):
+        """Ensure the submitted avatar filename actually exists."""
+        valid = _get_avatar_filenames()
+        if value and value not in valid:
+            raise serializers.ValidationError('Invalid avatar filename.')
+        return value
