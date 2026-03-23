@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -74,6 +74,21 @@ export default function SpecificationForm({ open, onClose, initial = null }) {
     applicability_data: initial.applicability_data || [],
     requirements_data: initial.requirements_data || [],
   } : EMPTY_FORM);
+
+  // Re-sync form whenever the dialog is opened (initial may load after mount)
+  useEffect(() => {
+    if (open) {
+      setForm(initial ? {
+        name: initial.name || '',
+        ifc_version: initial.ifc_version || 'IFC4',
+        identifier: initial.identifier || '',
+        description: initial.description || '',
+        instructions: initial.instructions || '',
+        applicability_data: Array.isArray(initial.applicability_data) ? initial.applicability_data : [],
+        requirements_data: Array.isArray(initial.requirements_data) ? initial.requirements_data : [],
+      } : EMPTY_FORM);
+    }
+  }, [open, initial?.id]);
 
   const [createSpec, { isLoading: creating }] = useCreateSpecificationMutation();
   const [updateSpec, { isLoading: updating }] = useUpdateSpecificationMutation();
