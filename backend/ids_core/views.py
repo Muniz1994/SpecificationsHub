@@ -112,8 +112,9 @@ class SpecificationViewSet(viewsets.ModelViewSet):
     def copy_to_library(self, request, pk=None):
         """Copy this specification to the user's private library."""
         orig = self.get_object()
+        new_name = request.data.get('name') or orig.name
         new_spec = Specification.objects.create(
-            name=orig.name,
+            name=new_name,
             ifc_version=orig.ifc_version,
             identifier=orig.identifier,
             description=orig.description,

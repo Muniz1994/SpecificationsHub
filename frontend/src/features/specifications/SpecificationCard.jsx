@@ -23,7 +23,7 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
   const handleGetIt = async (e) => {
     e.stopPropagation();
     try {
-      await copySpec(spec.id).unwrap();
+      await copySpec({ id: spec.id }).unwrap();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

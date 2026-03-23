@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
   ResizablePanelGroup,
@@ -17,6 +17,7 @@ import {
   useGetMySpecificationsQuery,
   useDeleteSpecificationMutation,
   useGetSpecificationDetailQuery,
+  useCopySpecificationToLibraryMutation,
 } from '@/features/specifications/specificationsApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
@@ -27,10 +28,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, Plus, Download } from 'lucide-react';
+import { Pencil, Plus, Download, Copy } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
   const { data } = useGetMySpecificationsQuery();
@@ -201,9 +204,61 @@ function FacetDetail({ facet, index }) {
   );
 }
 
+function DuplicateSpecDialog({ spec, open, onClose }) {
+  const [name, setName] = useState('');
+  const [copySpec, { isLoading }] = useCopySpecificationToLibraryMutation();
+
+  useEffect(() => {
+    if (open && spec) setName(`${spec.name} (copy)`);
+  }, [open, spec?.id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!spec?.id || !name.trim()) return;
+    try {
+      await copySpec({ id: spec.id, name: name.trim() }).unwrap();
+      onClose();
+    } catch (err) {
+      console.error('Failed to duplicate specification', err);
+      alert(`Failed to duplicate: ${err?.data?.detail || err?.status || 'Unknown error'}`);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Duplicate Specification</DialogTitle>
+          <DialogDescription>Enter a name for the copy.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="dup-name">Name</Label>
+            <Input
+              id="dup-name"
+              autoFocus
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="New specification name"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Duplicating…' : 'Duplicate'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function SpecificationDetail({ specId, onRemove }) {
   const { data: spec, isLoading } = useGetSpecificationDetailQuery(specId, { skip: !specId });
   const [showEdit, setShowEdit] = useState(false);
+  const [showDuplicate, setShowDuplicate] = useState(false);
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (!spec) return null;
@@ -220,6 +275,9 @@ function SpecificationDetail({ specId, onRemove }) {
           <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
         ))}
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDuplicate(true)}>
+            <Copy className="h-3.5 w-3.5 mr-1" /> Duplicate
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
           </Button>
@@ -264,6 +322,7 @@ function SpecificationDetail({ specId, onRemove }) {
       )}
 
       <SpecificationForm open={showEdit} onClose={() => setShowEdit(false)} initial={spec} />
+      <DuplicateSpecDialog spec={spec} open={showDuplicate} onClose={() => setShowDuplicate(false)} />
     </div>
   );
 }
