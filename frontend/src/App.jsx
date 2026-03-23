@@ -14,6 +14,7 @@ import IDSPage from '@/features/ids/IDSPage';
 import IDSEditorPage from '@/features/ids/IDSEditorPage';
 import UserLibraryPage from '@/features/library/UserLibraryPage';
 import UserInfoPage from '@/features/user/UserInfoPage';
+import GeneratePage from '@/features/generate/GeneratePage';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/editor" element={<IDSEditorPage />} />
             <Route path="/library" element={<UserLibraryPage />} />
             <Route path="/profile" element={<UserInfoPage />} />
+            <Route path="/generate" element={<GeneratePage />} />
           </Route>
         </Route>
       </Routes>

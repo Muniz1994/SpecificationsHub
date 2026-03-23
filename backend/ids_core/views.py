@@ -34,7 +34,10 @@ class SpecificationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name']
 
     def get_queryset(self):
-        return Specification.objects.filter(is_deleted=False).select_related('owner')
+        qs = Specification.objects.filter(is_deleted=False).select_related('owner')
+        if self.action == 'list':
+            qs = qs.filter(is_public=True)
+        return qs
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
@@ -140,7 +143,10 @@ class IDSViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'title']
 
     def get_queryset(self):
-        return IDS.objects.filter(is_deleted=False).select_related('owner').prefetch_related('specifications')
+        qs = IDS.objects.filter(is_deleted=False).select_related('owner').prefetch_related('specifications')
+        if self.action == 'list':
+            qs = qs.filter(is_public=True)
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -400,11 +406,11 @@ class SearchView(viewsets.ViewSet):
         if not query:
             return Response({'ids': [], 'specifications': []})
 
-        ids_qs = IDS.objects.filter(is_deleted=False).filter(
+        ids_qs = IDS.objects.filter(is_deleted=False, is_public=True).filter(
             Q(title__icontains=query) | Q(description__icontains=query)
         ).select_related('owner')[:10]
 
-        specs_qs = Specification.objects.filter(is_deleted=False).filter(
+        specs_qs = Specification.objects.filter(is_deleted=False, is_public=True).filter(
             Q(name__icontains=query) | Q(description__icontains=query)
         ).select_related('owner')[:10]
 

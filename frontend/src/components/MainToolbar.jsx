@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FileText, Layers, PenTool, Library, User, LogOut, Pencil } from 'lucide-react';
+import { FileText, Layers, PenTool, Library, User, LogOut, Pencil, Sparkles } from 'lucide-react';
 
 export default function MainToolbar() {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function MainToolbar() {
   const toolButtons = [
     { icon: Library, path: '/library', title: 'User Library' },
     //{ icon: Pencil, path: '/editor', title: 'IDS Editor' },
-    
+    { icon: Sparkles, path: '/generate', title: 'Generate from PDF' },
   ];
 
   const handleLogout = () => {
