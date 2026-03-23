@@ -10,6 +10,10 @@ import { Pencil, CheckSquare, Filter, X, BadgeCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetSpecificationDetailQuery } from './specificationsApi';
 
+const BACKEND_BASE = import.meta.env.VITE_API_BASE_URL
+  ? ''
+  : 'http://localhost:8000';
+
 function FacetPill({ f }) {
   const label = f.type ? f.type.charAt(0).toUpperCase() + f.type.slice(1) : '?';
   const detail = f.name
@@ -107,7 +111,7 @@ export default function SpecificationModal({ spec: specProp, onClose, onEdit }) 
                     <div className="text-xs text-muted-foreground flex items-center gap-2">
                       {spec.owner_avatar_url && (
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                          <AvatarImage src={`${BACKEND_BASE}${spec.owner_avatar_url}`} alt={spec.owner_username} />
                           <AvatarFallback className="text-[10px]">
                             {spec.owner_username.charAt(0).toUpperCase()}
                           </AvatarFallback>

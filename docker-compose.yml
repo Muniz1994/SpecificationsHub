@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    container_name: specshub-backend
+    restart: unless-stopped
+    volumes:
+      - sqlite-data:/app/data
+      - media-data:/app/media
+    environment:
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:3000}
+      - DATABASE_PATH=/app/data/db.sqlite3
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api/
+    container_name: specshub-frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:80"
+    depends_on:
+      - backend
+
+volumes:
+  sqlite-data:
+  media-data:
