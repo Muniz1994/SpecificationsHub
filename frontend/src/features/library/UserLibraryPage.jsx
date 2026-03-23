@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import TagManager from '@/components/TagManager';
+import { TagList } from '@/components/TagPill';
 
 function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
   const { data } = useGetMySpecificationsQuery();
@@ -105,12 +107,9 @@ function IDSDetail({ idsId, onRemove }) {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
-        {ids.tags && ids.tags.map((tag) => (
-          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-        ))}
         <div className="ml-auto flex gap-2">
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
             <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}
@@ -124,6 +123,9 @@ function IDSDetail({ idsId, onRemove }) {
             Remove from library
           </Button>
         </div>
+      </div>
+      <div className="mb-4">
+        <TagManager itemId={idsId} itemType="ids" currentTags={ids.tags || []} />
       </div>
 
       <Card className="mb-6">
@@ -268,12 +270,9 @@ function SpecificationDetail({ specId, onRemove }) {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-bold">{spec.name}</h1>
         <Badge variant="secondary">{spec.ifc_version}</Badge>
-        {spec.tags && spec.tags.map((tag) => (
-          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-        ))}
         <div className="ml-auto flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowDuplicate(true)}>
             <Copy className="h-3.5 w-3.5 mr-1" /> Duplicate
@@ -285,6 +284,9 @@ function SpecificationDetail({ specId, onRemove }) {
             Remove from library
           </Button>
         </div>
+      </div>
+      <div className="mb-4">
+        <TagManager itemId={specId} itemType="specification" currentTags={spec.tags || []} />
       </div>
 
       <Card className="mb-6">

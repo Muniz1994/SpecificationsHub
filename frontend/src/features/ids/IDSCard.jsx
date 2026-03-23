@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
 import { useCopyIDSToLibraryMutation } from '@/features/ids/idsApi';
 
@@ -49,15 +50,7 @@ export default function IDSCard({ ids }) {
               : ids.description
             : 'No description'}
         </p>
-        {ids.tags && ids.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {ids.tags.map((tag) => (
-              <Badge key={tag.id} variant="outline" className="text-xs">
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
-        )}
+        <TagList tags={ids.tags} className="mt-2" />
       </CardContent>
       <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
         <div>

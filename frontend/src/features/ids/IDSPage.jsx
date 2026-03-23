@@ -15,6 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -68,6 +69,7 @@ export default function IDSPage() {
       <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+        <TagList tags={ids.tags} />
         <div className="ml-auto flex gap-2">
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
             <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}

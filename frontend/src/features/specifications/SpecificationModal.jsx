@@ -2,6 +2,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -63,9 +64,7 @@ export default function SpecificationModal({ spec: specProp, onClose, onEdit }) 
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {spec?.ifc_version && <Badge variant="secondary">{spec.ifc_version}</Badge>}
               {spec?.is_public === false && <Badge variant="outline">Private</Badge>}
-              {spec?.tags?.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
-              ))}
+              <TagList tags={spec?.tags} />
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">

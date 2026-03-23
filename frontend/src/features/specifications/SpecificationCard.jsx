@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TagList } from '@/components/TagPill';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Tooltip,
@@ -74,7 +75,7 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
                 : spec.description
               : 'No description'}
           </p>
-
+          <TagList tags={spec.tags} />
         </div>
         {!hideAddButton && (
           <Button
