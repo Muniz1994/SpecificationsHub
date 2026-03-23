@@ -89,6 +89,11 @@ export const idsApi = api.injectEndpoints({
         { type: 'Specification', id: 'MINE' },
       ],
     }),
+
+    // Validate IDS against schema
+    validateIDS: builder.query({
+      query: (id) => `ids/${id}/validate/`,
+    }),
   }),
 });
 
@@ -104,4 +109,31 @@ export const {
   useCopyIDSToLibraryMutation,
   useDeleteIDSMutation,
   useDeleteIDSWithSpecificationsMutation,
+  useValidateIDSQuery,
 } = idsApi;
+
+/**
+ * Download an IDS as a .ids (XML) file.
+ * Uses fetch directly because RTK Query isn't designed for blob downloads.
+ */
+export async function downloadIDSFile(id, accessToken) {
+  const res = await fetch(`http://localhost:8000/api/ids/${id}/download/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.errors?.join(', ') || `Download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : 'ids.ids';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

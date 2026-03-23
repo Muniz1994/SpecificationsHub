@@ -8,8 +8,9 @@ import {
   useGetIDSDetailQuery,
   useRemoveSpecificationFromIDSMutation,
   useCopyIDSToLibraryMutation,
+  downloadIDSFile,
 } from '@/features/ids/idsApi';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Download } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -27,6 +28,19 @@ export default function IDSPage() {
 
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const accessToken = useSelector((s) => s.auth.accessToken);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadIDSFile(id, accessToken);
+    } catch (e) {
+      alert(e.message || 'Download failed');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (error) return <p className="text-destructive">Failed to load IDS.</p>;
@@ -54,11 +68,16 @@ export default function IDSPage() {
       <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
-        {!isOwner && (
-          <Button size="sm" className="ml-auto" onClick={() => setShowConfirmModal(true)}>
-            Get IDS
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
+            <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}
           </Button>
-        )}
+          {!isOwner && (
+            <Button size="sm" onClick={() => setShowConfirmModal(true)}>
+              Get IDS
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-8">

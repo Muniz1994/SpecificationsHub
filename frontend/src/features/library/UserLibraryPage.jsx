@@ -11,6 +11,7 @@ import {
   useGetMyIDSQuery,
   useDeleteIDSMutation,
   useAddSpecificationToIDSMutation,
+  downloadIDSFile,
 } from '@/features/ids/idsApi';
 import {
   useGetMySpecificationsQuery,
@@ -26,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Download } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -70,12 +71,26 @@ function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
 
 function IDSDetail({ idsId, onRemove }) {
   const currentUser = useSelector(selectCurrentUser);
+  const accessToken = useSelector((s) => s.auth.accessToken);
   const { data: ids, isLoading } = useGetIDSDetailQuery(idsId, { skip: !idsId });
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [editSpec, setEditSpec] = useState(null);
   const [showEditIDS, setShowEditIDS] = useState(false);
   const [showAddSpec, setShowAddSpec] = useState(false);
   const [showNewSpec, setShowNewSpec] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      await downloadIDSFile(idsId, accessToken);
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert(err.message || 'Download failed');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (!idsId)
     return <p className="text-muted-foreground mt-10 text-center">Select an item from the sidebar.</p>;
@@ -94,6 +109,9 @@ function IDSDetail({ idsId, onRemove }) {
           <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
         ))}
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
+            <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}
+          </Button>
           {isOwner && (
             <Button variant="outline" size="sm" onClick={() => setShowEditIDS(true)}>
               <Pencil className="h-3.5 w-3.5 mr-1" /> Edit IDS info

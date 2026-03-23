@@ -2,6 +2,9 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
+from django.http import HttpResponse
+
+from .ids_export import ids_to_xml_string, validate_ids
 
 from .models import IDS, Specification, Tag, UserLibrary, IDSSpecification
 from .serializers import (
@@ -265,6 +268,32 @@ class IDSViewSet(viewsets.ModelViewSet):
             )
 
         return Response(IDSSerializer(new_ids, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    # ── Download & Validate ─────────────────────────────────────────────
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated],
+            url_path='download')
+    def download(self, request, pk=None):
+        """Download this IDS as a schema-valid .ids (XML) file."""
+        ids_obj = self.get_object()
+        xml_string, errors = ids_to_xml_string(ids_obj)
+        if errors:
+            return Response(
+                {'valid': False, 'errors': errors},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        filename = (ids_obj.title or 'ids').replace(' ', '_') + '.ids'
+        response = HttpResponse(xml_string, content_type='application/xml')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated],
+            url_path='validate')
+    def validate_ids(self, request, pk=None):
+        """Check whether this IDS can produce schema-valid XML."""
+        ids_obj = self.get_object()
+        is_valid, errors = validate_ids(ids_obj)
+        return Response({'valid': is_valid, 'errors': errors})
 
 
 class TagViewSet(viewsets.ModelViewSet):
