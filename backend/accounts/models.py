@@ -12,6 +12,10 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
+    is_certified = models.BooleanField(
+        default=False,
+        help_text='Designates whether this user is a certified creator.',
+    )
 
     @property
     def ids_count(self):

@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, BadgeCheck } from 'lucide-react';
 import {
   useCopyIDSToLibraryMutation,
   useEndorseIDSMutation,
@@ -74,7 +74,12 @@ export default function IDSCard({ ids }) {
       </CardContent>
       <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          {ids.owner_username && <span>by {ids.owner_username}</span>}
+          {ids.owner_username && (
+            <span className="flex items-center gap-1">
+              by {ids.owner_username}
+              {ids.owner_is_certified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />}
+            </span>
+          )}
           <Button
             variant="ghost"
             size="sm"

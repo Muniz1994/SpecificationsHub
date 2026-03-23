@@ -3,6 +3,7 @@ import { selectCurrentUser } from '@/features/auth/authSlice';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { BadgeCheck } from 'lucide-react';
 
 export default function UserInfoPage() {
   const user = useSelector(selectCurrentUser);
@@ -25,9 +26,10 @@ export default function UserInfoPage() {
           </Avatar>
 
           <div className="space-y-2">
-            <div className="text-sm">
+            <div className="text-sm flex items-center gap-1">
               <strong className="text-foreground">Name:</strong>{' '}
               <span className="text-muted-foreground">{user.first_name || '—'}</span>
+              {user.is_certified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
             </div>
             <div className="text-sm">
               <strong className="text-foreground">Surname:</strong>{' '}

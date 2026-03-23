@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, BadgeCheck } from 'lucide-react';
 import {
   useCopySpecificationToLibraryMutation,
   useEndorseSpecificationMutation,
@@ -111,16 +111,26 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
       {spec.owner_username && (
         <CardFooter className="text-xs text-muted-foreground pt-0 flex justify-between items-center">
           {spec.owner_username && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
-                  <AvatarFallback style={{ backgroundColor: getAvatarColor(spec.owner_username), color: '#fff' }}>
-                    {spec.owner_username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent>{spec.owner_username}</TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
+                    <AvatarFallback style={{ backgroundColor: getAvatarColor(spec.owner_username), color: '#fff' }}>
+                      {spec.owner_username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>{spec.owner_username}</TooltipContent>
+              </Tooltip>
+              {spec.owner_is_certified && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <BadgeCheck className="h-4 w-4 text-blue-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>Certified Creator</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           )}
           <Button
             variant="ghost"
