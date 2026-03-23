@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 import { useDeleteIDSMutation } from '@/features/ids/idsApi';
+import { useGetMySpecificationsQuery, useDeleteSpecificationMutation } from '@/features/specifications/specificationsApi';
 import {
   Dialog,
   DialogContent,
@@ -15,36 +16,64 @@ import {
 } from '@/components/ui/dialog';
 
 export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
-  const [deleteIDS, { isLoading: isDeleting }] = useDeleteIDSMutation();
+  const [activeTab, setActiveTab] = useState('ids');
+  const [deleteIDS, { isLoading: isDeletingIDS }] = useDeleteIDSMutation();
+  const [deleteSpec, { isLoading: isDeletingSpec }] = useDeleteSpecificationMutation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedIDSToDelete, setSelectedIDSToDelete] = useState(null);
+  const { data: specsData } = useGetMySpecificationsQuery();
+  const mySpecs = specsData?.results || [];
 
-  const handleDeleteClick = (e, ids) => {
+  const isDeleting = isDeletingIDS || isDeletingSpec;
+
+  const handleDeleteClick = (e, item) => {
     e.stopPropagation();
-    setSelectedIDSToDelete(ids);
+    setSelectedIDSToDelete(item);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!selectedIDSToDelete) return;
     try {
-      await deleteIDS(selectedIDSToDelete.id).unwrap();
+      const isSpec = !selectedIDSToDelete.title;
+      if (isSpec) {
+        await deleteSpec(selectedIDSToDelete.id).unwrap();
+      } else {
+        await deleteIDS(selectedIDSToDelete.id).unwrap();
+      }
       setShowDeleteModal(false);
       setSelectedIDSToDelete(null);
     } catch (err) {
-      alert('Failed to delete IDS. Please try again.');
+      alert('Failed to delete item. Please try again.');
       console.error(err);
     }
   };
   return (
-    <aside className="min-h-full shrink-0 border-r bg-card p-4">
-      <h3 className="text-sm font-semibold mb-3">My IDSs</h3>
+    <aside className="min-h-full shrink-0 border-r bg-card p-4 flex flex-col">
+      <div className="flex gap-2 mb-4">
+        <Button
+          variant={activeTab === 'ids' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('ids')}
+        >
+          My IDSs
+        </Button>
+        <Button
+          variant={activeTab === 'specs' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('specs')}
+        >
+          My Specifications
+        </Button>
+      </div>
       <Separator className="mb-3" />
-      {(!idsList || idsList.length === 0) && (
-        <p className="text-sm text-muted-foreground">No IDSs yet.</p>
-      )}
-      <ScrollArea className="h-[calc(100vh-160px)]">
-        <ul className="space-y-1">
+      {activeTab === 'ids' ? (
+        <>
+          {(!idsList || idsList.length === 0) && (
+            <p className="text-sm text-muted-foreground">No IDSs yet.</p>
+          )}
+          <ScrollArea className="h-[calc(100vh-200px)] flex-1">
+            <ul className="space-y-1">
           {idsList &&
             idsList.map((ids) => (
               <li key={ids.id} className="flex items-center gap-2">
@@ -69,16 +98,49 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
                   <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                 </Button>
               </li>
-            ))}
-        </ul>
-      </ScrollArea>
+            ))}            </ul>
+          </ScrollArea>
+        </>
+      ) : (
+        <>
+          {(!mySpecs || mySpecs.length === 0) && (
+            <p className="text-sm text-muted-foreground">No specifications yet.</p>
+          )}
+          <ScrollArea className="h-[calc(100vh-200px)] flex-1">
+            <ul className="space-y-1">
+              {mySpecs &&
+                mySpecs.map((spec) => (
+                  <li key={spec.id} className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 justify-start text-left"
+                      title={spec.description || 'No description'}
+                    >
+                      {spec.name}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 shrink-0"
+                      onClick={(e) => handleDeleteClick(e, spec)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </li>
+                ))}
+            </ul>
+          </ScrollArea>
+        </>
+      )}
 
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete IDS</DialogTitle>
+            <DialogTitle>Delete {selectedIDSToDelete?.title ? 'IDS' : 'Specification'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedIDSToDelete?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedIDSToDelete?.title || selectedIDSToDelete?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
