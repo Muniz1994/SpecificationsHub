@@ -2,39 +2,59 @@ import { api } from '@/app/api';
 
 export const idsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // All community IDSs
     getIDSList: builder.query({
-      query: (params = {}) => ({
-        url: 'ids/',
-        params,
-      }),
+      query: (params = {}) => ({ url: 'ids/', params }),
       providesTags: (result) =>
         result?.results
-          ? [
-              ...result.results.map(({ id }) => ({ type: 'IDS', id })),
-              { type: 'IDS', id: 'LIST' },
-            ]
+          ? [...result.results.map(({ id }) => ({ type: 'IDS', id })), { type: 'IDS', id: 'LIST' }]
           : [{ type: 'IDS', id: 'LIST' }],
     }),
 
-    // Single IDS detail (with nested specifications)
     getIDSDetail: builder.query({
       query: (id) => `ids/${id}/`,
       providesTags: (result, error, id) => [{ type: 'IDS', id }],
     }),
 
-    // Current user's IDSs
     getMyIDS: builder.query({
       query: () => 'ids/mine/',
       providesTags: [{ type: 'IDS', id: 'MINE' }],
     }),
 
-    // Search across IDSs and Specifications
-    search: builder.query({
-      query: (q) => ({
-        url: 'search/',
-        params: { q },
+    createIDS: builder.mutation({
+      query: (body) => ({ url: 'ids/', method: 'POST', body }),
+      invalidatesTags: [{ type: 'IDS', id: 'LIST' }, { type: 'IDS', id: 'MINE' }],
+    }),
+
+    updateIDS: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `ids/${id}/`, method: 'PATCH', body }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'IDS', id }, { type: 'IDS', id: 'LIST' }],
+    }),
+
+    deleteIDS: builder.mutation({
+      query: (id) => ({ url: `ids/${id}/`, method: 'DELETE' }),
+      invalidatesTags: [{ type: 'IDS', id: 'LIST' }, { type: 'IDS', id: 'MINE' }],
+    }),
+
+    addSpecificationToIDS: builder.mutation({
+      query: ({ idsId, specificationId }) => ({
+        url: `ids/${idsId}/add_specification/`,
+        method: 'POST',
+        body: { specification_id: specificationId },
       }),
+      invalidatesTags: (result, error, { idsId }) => [{ type: 'IDS', id: idsId }],
+    }),
+
+    removeSpecificationFromIDS: builder.mutation({
+      query: ({ idsId, specificationId }) => ({
+        url: `ids/${idsId}/remove_specification/`,
+        method: 'POST',
+        body: { specification_id: specificationId },
+      }),
+      invalidatesTags: (result, error, { idsId }) => [{ type: 'IDS', id: idsId }],
+    }),
+
+    search: builder.query({
+      query: (q) => ({ url: 'search/', params: { q } }),
     }),
 
     // Copy IDS to user library
@@ -61,6 +81,11 @@ export const {
   useGetIDSListQuery,
   useGetIDSDetailQuery,
   useGetMyIDSQuery,
+  useCreateIDSMutation,
+  useUpdateIDSMutation,
+  useDeleteIDSMutation,
+  useAddSpecificationToIDSMutation,
+  useRemoveSpecificationFromIDSMutation,
   useSearchQuery,
   useCopyIDSToLibraryMutation,
   useDeleteIDSMutation,

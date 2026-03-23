@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
@@ -31,9 +32,33 @@ class SpecificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Specification.objects.filter(is_deleted=False).select_related('owner')
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticatedOrReadOnly()]
+        return [permissions.IsAuthenticated()]
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticatedOrReadOnly()]
+        return [permissions.IsAuthenticated()]
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        # Only the owner may update
+        if serializer.instance.owner != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.owner != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        instance.delete()
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
         qs = self.get_queryset().filter(owner=request.user)
@@ -67,6 +92,29 @@ class SpecificationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(specification=spec)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='add_specification')
+    def add_specification(self, request, pk=None):
+        ids_obj = self.get_object()
+        if ids_obj.owner != request.user:
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        spec_id = request.data.get('specification_id')
+        spec = Specification.objects.filter(pk=spec_id).first()
+        if not spec:
+            return Response({'detail': 'Specification not found.'}, status=status.HTTP_404_NOT_FOUND)
+        order = ids_obj.specifications.count()
+        IDSSpecification.objects.get_or_create(ids=ids_obj, specification=spec, defaults={'order': order})
+        return Response(IDSSerializer(ids_obj, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='remove_specification')
+    def remove_specification(self, request, pk=None):
+        ids_obj = self.get_object()
+        if ids_obj.owner != request.user:
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        spec_id = request.data.get('specification_id')
+        IDSSpecification.objects.filter(ids=ids_obj, specification_id=spec_id).delete()
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
@@ -104,8 +152,25 @@ class IDSViewSet(viewsets.ModelViewSet):
             return IDSListSerializer
         return IDSSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticatedOrReadOnly()]
+        return [permissions.IsAuthenticated()]
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        if serializer.instance.owner != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.owner != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        instance.delete()
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):

@@ -1,66 +1,48 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Pencil } from 'lucide-react';
 
-function ApplicabilitySection({ conditions }) {
-  if (!conditions || conditions.length === 0) return null;
+function FacetList({ facets }) {
+  if (!facets || facets.length === 0) return null;
   return (
-    <>
-      <Separator />
-      <div>
-        <span className="text-sm font-medium">Applicability Conditions</span>
-        <div className="mt-2 space-y-2">
-          {conditions.map((c) => (
-            <div key={c.id} className="rounded-md bg-muted px-3 py-2 text-xs">
-              <span className="font-medium capitalize">{c.type}</span>
-              {c.key && <span className="ml-2 text-muted-foreground">key: {c.key}</span>}
-              {c.operator && <span className="ml-2 text-muted-foreground">op: {c.operator}</span>}
-              {c.value && <span className="ml-2 text-muted-foreground">= {c.value}</span>}
-            </div>
-          ))}
+    <div className="space-y-2">
+      {facets.map((f, i) => (
+        <div key={i} className="rounded-md bg-muted px-3 py-2 text-xs space-y-0.5">
+          <span className="font-medium capitalize">{f.type}</span>
+          {f.name && <span className="ml-2 text-muted-foreground">name: {f.name}</span>}
+          {f.property_set && <span className="ml-2 text-muted-foreground">{f.property_set}.{f.base_name}</span>}
+          {f.system && <span className="ml-2 text-muted-foreground">system: {f.system}</span>}
+          {f.cardinality && <span className="ml-2 text-muted-foreground">[{f.cardinality}]</span>}
         </div>
-      </div>
-    </>
+      ))}
+    </div>
   );
 }
 
-function RequirementsSection({ requirements }) {
-  if (!requirements || requirements.length === 0) return null;
-  return (
-    <>
-      <Separator />
-      <div>
-        <span className="text-sm font-medium">Requirements</span>
-        <div className="mt-2 space-y-2">
-          {requirements.map((r) => (
-            <div key={r.id} className="rounded-md bg-muted px-3 py-2 text-xs">
-              <span className="font-medium">{r.property_set}.{r.property_name}</span>
-              <span className="ml-2 text-muted-foreground capitalize">[{r.constraint_type}]</span>
-              {r.value && <span className="ml-2 text-muted-foreground">= {r.value}</span>}
-              {r.data_type && <span className="ml-2 text-muted-foreground">({r.data_type})</span>}
-              {r.unit && <span className="ml-2 text-muted-foreground">{r.unit}</span>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
-  );
-}
+export default function SpecificationModal({ spec, onClose, onEdit }) {
+  const hasFacets = Array.isArray(spec?.applicability_data) && spec.applicability_data.length > 0;
+  const hasReqs = Array.isArray(spec?.requirements_data) && spec.requirements_data.length > 0;
 
-export default function SpecificationModal({ spec, onClose }) {
   return (
     <Dialog open={!!spec} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle className="text-xl">{spec?.name}</DialogTitle>
-          <DialogDescription>Specification details</DialogDescription>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <DialogTitle className="text-xl">{spec?.name}</DialogTitle>
+              <DialogDescription>Specification details</DialogDescription>
+            </div>
+            {onEdit && spec && (
+              <Button variant="outline" size="sm" onClick={() => onEdit(spec)}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {spec && (
@@ -108,8 +90,29 @@ export default function SpecificationModal({ spec, onClose }) {
                 </div>
               )}
 
-              <ApplicabilitySection conditions={spec.applicability_conditions} />
-              <RequirementsSection requirements={spec.requirements} />
+              {hasFacets && (
+                <>
+                  <Separator />
+                  <div>
+                    <span className="text-sm font-medium">Applicability</span>
+                    <div className="mt-2">
+                      <FacetList facets={spec.applicability_data} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {hasReqs && (
+                <>
+                  <Separator />
+                  <div>
+                    <span className="text-sm font-medium">Requirements</span>
+                    <div className="mt-2">
+                      <FacetList facets={spec.requirements_data} />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {spec.owner_username && (
                 <>

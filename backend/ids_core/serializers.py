@@ -55,9 +55,11 @@ class SpecificationSerializer(serializers.ModelSerializer):
 
 
 class SpecificationMiniSerializer(serializers.ModelSerializer):
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+
     class Meta:
         model = Specification
-        fields = ('id', 'name', 'ifc_version', 'description')
+        fields = ('id', 'name', 'ifc_version', 'description', 'owner_username')
 
 
 class IDSSerializer(serializers.ModelSerializer):
