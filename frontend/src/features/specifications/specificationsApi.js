@@ -65,5 +65,4 @@ export const {
   useCreateSpecificationMutation,
   useUpdateSpecificationMutation,
   useDeleteSpecificationMutation,
-  useDeleteSpecificationMutation,
 } = specificationsApi;

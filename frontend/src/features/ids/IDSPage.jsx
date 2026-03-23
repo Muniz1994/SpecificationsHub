@@ -1,22 +1,81 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import { useSelector } from 'react-redux';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
 import SpecificationForm from '@/features/specifications/SpecificationForm';
+import { selectCurrentUser } from '@/features/auth/authSlice';
+import {
+  useGetIDSDetailQuery,
+  useAddSpecificationToIDSMutation,
+  useRemoveSpecificationFromIDSMutation,
+  useCopyIDSToLibraryMutation,
+} from '@/features/ids/idsApi';
+import { useGetMySpecificationsQuery } from '@/features/specifications/specificationsApi';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
 import IDSForm from '@/features/ids/IDSForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
+function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
+  const { data } = useGetMySpecificationsQuery();
+  const [addSpec] = useAddSpecificationToIDSMutation();
+  const mySpecs = (data?.results || data || []).filter(
+    (s) => !existingIds.includes(s.id)
+  );
+
+  const handleAdd = async (specId) => {
+    await addSpec({ idsId, specificationId: specId });
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add Specification</DialogTitle>
+          <DialogDescription>Choose one of your specifications to add to this IDS.</DialogDescription>
+        </DialogHeader>
+        {mySpecs.length === 0
+          ? <p className="text-sm text-muted-foreground italic">No specifications available. Create one first.</p>
+          : (
+            <ul className="space-y-2 max-h-80 overflow-y-auto">
+              {mySpecs.map((spec) => (
+                <li key={spec.id}
+                  className="flex items-center justify-between rounded-md border px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium">{spec.name}</p>
+                    <p className="text-xs text-muted-foreground">{spec.ifc_version}</p>
+                  </div>
+                  <Button size="sm" onClick={() => handleAdd(spec.id)}>Add</Button>
+                </li>
+              ))}
+            </ul>
+          )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 export default function IDSPage() {
   const { id } = useParams();
   const { data: ids, isLoading, error } = useGetIDSDetailQuery(id);
   const currentUser = useSelector(selectCurrentUser);
   const [removeSpec] = useRemoveSpecificationFromIDSMutation();
+   const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
 
   const [selectedSpec, setSelectedSpec] = useState(null);
+  const [editSpec, setEditSpec] = useState(null);
+  const [showEditIDS, setShowEditIDS] = useState(false);
+  const [showAddSpec, setShowAddSpec] = useState(false);
+  const [showNewSpec, setShowNewSpec] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (error) return <p className="text-destructive">Failed to load IDS.</p>;
@@ -27,6 +86,17 @@ export default function IDSPage() {
 
   const handleRemoveSpec = async (specId) => {
     await removeSpec({ idsId: ids.id, specificationId: specId });
+  };
+
+  const handleGetIDS = async () => {
+    try {
+      await copyIDSToLibrary(id).unwrap();
+      setShowConfirmModal(false);
+      alert('IDS and specifications added to your library!');
+    } catch (err) {
+      alert('Failed to add IDS to library. Please try again.');
+      console.error(err);
+    }
   };
 
   return (

@@ -83,7 +83,6 @@ export const {
   useGetMyIDSQuery,
   useCreateIDSMutation,
   useUpdateIDSMutation,
-  useDeleteIDSMutation,
   useAddSpecificationToIDSMutation,
   useRemoveSpecificationFromIDSMutation,
   useSearchQuery,
