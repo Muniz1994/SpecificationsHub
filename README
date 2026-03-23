@@ -1,145 +1,318 @@
 # SpecificationsHUB
 
-Platform to share IDS and their specifications with the community
+A web platform for creating, sharing, and managing **Information Delivery Specifications (IDS)** — an open [buildingSMART](https://www.buildingsmart.org/) standard for defining information requirements in BIM projects.
 
-## Feature
-
-- Create edit and upload IDSs
-- Controlled user authentication and user library (IDSs and specifications)
-- Create your IDSs getting the specifications shared from the community
-
-## Pages 
-
-- Main page (unlogged) (MPU)
-    * Page that describes the project. It has a horizontal layout: a) top bar with Logo at left and log in button and register button at the right. The log in button leads to the log in page and the register button leads to the register page.
-- Main page (logged) (MPL)
-    * The main page, when you are logged, is comprised of the main toolbar at left and the main section filling the right part of the page. The main section is comprised at the top by a searching box and the remaining space by 2 main sections: i) specifications section, where cards showing information about each specification is shown (the cards fill the container horizontally, being just one row of specifications); ii) IDSs sections, where cards showing IDSs information are shown, having the same layout as the specification page above. While the specification card open a modal showing more information per specification, the IDS card lead to a page (IP) showing more information about the IDS and the specifications it is comprised.
-- Community specifications page (CSP)
-    * This page is comprised of the main toolbar at left at left and the main section filling the right part of the page. cards showing information about each specification is shown (the cards fill the container horizontally, being just one row of specifications); The specification cards, when clicked open a modal showing more infomration bout the specification.
-- Community IDSs page (CIP)
-    * This page is comprised of the main toolbar at left at left and the main section filling the right part of the page. cards showing information about each IDS is shown (the cards fill the container horizontally, being just one row of IDSs); The IDS cards, when clicked open the respective IDS page (IP), with general information from the IDS and the specifications it is comprised for..
-- IDS page (IP)
-    * Besides the main toolbar at left, The IDS page comprise general inforamtion about the IDS and all the specifications it comprises. The specifications must be shown as cards, below the general information. The specification cards, when clicked, open a modal showing more information about the specification.
-- User Library (UL)
-    * Besides the main toolbar at the left, the user library has a vertical bar that present all the IDSs of the user. When the IDS are clicked it shows the IDS page (IP) at the right part of the page.
-- User information (UI)
-    * Besides the main toolbar at the left,  Show basic information about the user, such as: a) name; b) surname; c) email and d) profile picture. In a under section, show the amount of IDS and specifications created.
-- Log in page (LP)
-    * Basic default log in page
-- Create account page (CAP)
-    * Basic create account page
-- IDS editor (IE)
-    * For now, an empity page 
-
-
-## Notable components
-
-- Main toolbar
-    * left toolbar comprising the folowing buttons: 
-        a) "S" -> Leads to Community specifications (CSP)
-        b) "I" -> Leads to Community IDSs (CIP)
-        c) "E" -> Leads to IDS Editor (IE)
-        d) "L" -> Leads to User Library (UL)
-        e) "U" -> Open a context menu with user info
-
-    * This main toolbar has a vertical layout that is close by default, just showing the letters mensioned above.
-    * The toolbar appears left to every page except the unlogged main page.
-
-
-## Stack 
-
-For the frontend, the app should use  Vite (React)
-
-For teh backend, the app should use Django, with sqlite db
-
-To connect the backend to the frontend, the app must use Django REST framework.
-
-
-## Dummy initial db structure
-
-The dummy initial db structure that must be implemented should follow 2 main aspects:
-
-a) IDS and specifications element structure should come from the schema defined in the "ids.xsd" file
-b) Main user data needed to implement authentication and connection with the IDSs and their specifications
-
-In short to sum up the relationship of the user with the IDS: 
-    - the User can be associated with many specifications
-    - the User can be associated with many IDSs
-    - The IDS can be associated with manny specifications
-    - If a user is associated with IDSs, it is associated with its specifications, but it can be associated with the specifications directly
-
-# Further instructions 
-
-* Enable the connection of all architecture elements in a scalable way (frontend + backend)
-* Create the auth system absend on the tools that Django provides and connect it to the frontend
-* Feel free to implement a type of middleware, like the one from redux, if it make the code easily expandable
-* take into account that this code will have to be expanded and should b easy to understand for non hardcore coders
+SpecificationsHUB lets users browse community-shared Specifications and IDS documents, compose their own IDS by combining Specifications, import and export standard `.ids` XML files (validated against the IDS 1.0 XSD schema), and manage everything through a personal library.
 
 ---
 
-# Implementation Summary
+## Features
 
-## Backend (Django + DRF + JWT)
+### IDS Management
+- **Create, edit, and delete** IDS documents with full metadata (title, version, author, date, purpose, milestone, copyright)
+- **Compose IDS** by attaching any number of Specifications (reusable building blocks)
+- **Import `.ids` files** — upload any `.ids` XML file; the system validates it against the IDS 1.0 XSD schema and shows detailed error reports if the file is non-compliant
+- **Export / Download `.ids` files** — generate schema-valid IDS XML from any IDS in your library, named after the IDS title
+- **Validate** — check whether an IDS can produce valid XML without downloading
 
-**Project**: `backend/config/` — Django settings, CORS, JWT config, SQLite DB
+### Specifications
+- **Create, edit, and delete** Specifications with name, IFC version, identifier, description, and instructions
+- **Facet builder** — visual editor for applicability and requirements facets (Entity, Attribute, Property, Classification, Material, PartOf) with live preview
+- **Wide modal view** — two-panel detail modal with facet summary on the left and full details on the right
 
-**Apps**:
-- **`accounts/`** — Custom `User` model with `profile_picture`, registration, login (JWT), `/api/auth/me/` endpoint
-- **`ids_core/`** — `IDS`, `Specification`, `IDSSpecification` models derived from `ids.xsd`, full CRUD ViewSets, search endpoint
+### Community & Library
+- **Community browsing** — public listing of all shared IDS documents and Specifications
+- **Full-text search** across IDS titles, Specification names, and descriptions
+- **Copy to library** — deep-copy any community IDS (with all its Specifications) into your private library
+- **Personal library** — resizable two-panel layout with a sidebar listing your IDSs and Specifications, and a detail view on the right
+- **Tag system** — organize with tags by category (use case, stage, discipline, other)
 
-**API Endpoints**:
+### Authentication & User Profile
+- **JWT authentication** — register, log in, automatic token refresh on expiry
+- **User profile** — view and edit name, email, and profile picture; see IDS and Specification counts
+- **Light / dark theme** toggle
 
-| Endpoint | Description |
+---
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
-| `POST /api/auth/register/` | Create account |
-| `POST /api/auth/login/` | JWT token pair |
-| `POST /api/auth/refresh/` | Refresh token |
-| `GET/PATCH /api/auth/me/` | User profile |
-| `GET /api/ids/` | Community IDSs |
-| `GET /api/ids/:id/` | IDS detail + specs |
-| `GET /api/ids/mine/` | User's IDSs |
-| `GET /api/specifications/` | Community specs |
-| `GET /api/specifications/mine/` | User's specs |
-| `GET /api/search/?q=` | Search both |
-
-**Seed data**: `python manage.py seed_data` — 3 users (alice/bob/carol, password: `Demo1234!`), 12 specifications, 6 IDSs
+| **Backend** | Python · Django 6 · Django REST Framework · SimpleJWT |
+| **Frontend** | React 19 · Vite · Tailwind CSS 4 · Redux Toolkit / RTK Query |
+| **Database** | SQLite |
+| **UI** | shadcn/ui (Radix UI primitives) · Lucide icons |
+| **IDS Parsing** | Vendored `ifctester` library · `xmlschema` for XSD validation |
 
 ---
 
-## Frontend (Vite + React + Redux Toolkit)
+## Project Structure
 
-**State management**: Redux Toolkit with RTK Query for all API calls, auto token refresh on 401
-
-**Pages** (matching README spec):
-
-| Page | Route | Component |
-|---|---|---|
-| MPU (Landing) | `/` | `LandingPage.jsx` |
-| LP (Login) | `/login` | `LoginPage.jsx` |
-| CAP (Register) | `/register` | `RegisterPage.jsx` |
-| MPL (Dashboard) | `/dashboard` | `DashboardPage.jsx` |
-| CSP (Community Specs) | `/specifications` | `CommunitySpecsPage.jsx` |
-| CIP (Community IDSs) | `/ids` | `CommunityIDSPage.jsx` |
-| IP (IDS Detail) | `/ids/:id` | `IDSPage.jsx` |
-| IE (Editor) | `/editor` | `IDSEditorPage.jsx` — placeholder |
-| UL (Library) | `/library` | `UserLibraryPage.jsx` |
-| UI (Profile) | `/profile` | `UserInfoPage.jsx` |
-
-**Key components**: `MainToolbar` (S/I/E/L/U buttons), `Layout` wrapper, `SpecificationModal`, `SearchBox`
+```
+SpecificationsHub/
+├── ids.xsd                              # buildingSMART IDS 1.0 XSD schema
+├── README                               # This file
+│
+├── backend/
+│   ├── manage.py                        # Django entry point
+│   ├── requirements.txt                 # Python dependencies
+│   ├── db.sqlite3                       # SQLite database
+│   ├── config/                          # Django settings, URLs, WSGI/ASGI
+│   ├── accounts/                        # Custom User model, auth views
+│   ├── ids_core/                        # Core app
+│   │   ├── models.py                    # IDS, Specification, Tag, UserLibrary
+│   │   ├── views.py                     # CRUD ViewSets + import/export/validate
+│   │   ├── serializers.py               # DRF serializers with facet validation
+│   │   ├── ids_export.py                # DB → ifctester → schema-valid IDS XML
+│   │   ├── ids_import.py                # .ids XML → validate → parse → DB models
+│   │   └── management/commands/
+│   │       └── seed_data.py             # Populate DB with demo data
+│   └── ifctester/                       # Vendored IDS parsing/validation library
+│       ├── ids.py                       # Ids, Specification classes
+│       ├── facet.py                     # Entity, Attribute, Property, etc.
+│       └── ids.xsd                      # XSD schema copy for validation
+│
+└── frontend/
+    ├── package.json
+    ├── vite.config.js
+    └── src/
+        ├── App.jsx                      # Route definitions
+        ├── app/                         # Redux store + RTK Query base API
+        ├── components/                  # Layout, MainToolbar, SearchBox, theme, ui/
+        ├── features/
+        │   ├── auth/                    # Login, Register, ProtectedRoute, authSlice
+        │   ├── ids/                     # IDS pages, cards, editor, idsApi
+        │   ├── specifications/          # Spec pages, cards, modal, form, FacetBuilder
+        │   ├── library/                 # UserLibraryPage, LibrarySidebar
+        │   └── user/                    # UserInfoPage
+        └── pages/                       # LandingPage, DashboardPage
+```
 
 ---
 
-## How to run
+## Getting Started
+
+### Prerequisites
+
+- **Python 3.11+** and `pip`
+- **Node.js 18+** and `npm`
+
+### Installation
 
 ```bash
-# Backend
+# Clone the repository
+git clone https://github.com/your-user/SpecificationsHub.git
+cd SpecificationsHub
+
+# ── Backend ──────────────────────────────────────────────
 cd backend
-source ../venv/bin/activate.fish
+python -m venv ../venv
+source ../venv/bin/activate        # Linux/macOS
+# ..\venv\Scripts\activate         # Windows
+
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_data          # Optional: populate with demo data
+
+# ── Frontend ─────────────────────────────────────────────
+cd ../frontend
+npm install
+```
+
+### Running
+
+Open **two terminals**:
+
+```bash
+# Terminal 1 — Backend (http://localhost:8000)
+cd backend
+source ../venv/bin/activate
 python manage.py runserver
 
-# Frontend (new terminal)
+# Terminal 2 — Frontend (http://localhost:5173)
 cd frontend
 npm run dev
 ```
 
-Frontend at `http://localhost:5173`, backend at `http://localhost:8000`. Login with `alice` / `Demo1234!` to see the dashboard with seeded data.
+Open **http://localhost:5173** in your browser.
+
+### Demo Accounts
+
+If you ran `seed_data`, three demo users are available:
+
+| Username | Password | Content |
+|---|---|---|
+| `alice` | `Demo1234!` | 4 Specifications, 2 IDSs |
+| `bob` | `Demo1234!` | 4 Specifications, 2 IDSs |
+| `carol` | `Demo1234!` | 4 Specifications, 2 IDSs |
+
+---
+
+## Pages & Routes
+
+| Route | Page | Description |
+|---|---|---|
+| `/` | Landing | Project description for unauthenticated users |
+| `/login` | Login | JWT authentication |
+| `/register` | Register | Create a new account |
+| `/dashboard` | Dashboard | Search bar, recent Specifications and IDS cards |
+| `/specifications` | Community Specifications | Browse all public Specifications |
+| `/ids` | Community IDSs | Browse all public IDS documents |
+| `/ids/:id` | IDS Detail | IDS metadata + Specification cards, download button |
+| `/library` | User Library | Personal IDSs and Specifications with two-panel layout |
+| `/editor` | IDS Editor | Placeholder for future visual editor |
+| `/profile` | User Profile | Edit name, email, profile picture |
+
+---
+
+## API Reference
+
+### Authentication — `/api/auth/`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register/` | Create account |
+| POST | `/api/auth/login/` | Obtain JWT token pair (access + refresh) |
+| POST | `/api/auth/refresh/` | Refresh access token |
+| GET | `/api/auth/me/` | Get current user profile |
+| PATCH | `/api/auth/me/` | Update user profile |
+
+### IDS — `/api/ids/`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/ids/` | List public IDSs (paginated, searchable) |
+| POST | `/api/ids/` | Create a new IDS |
+| GET | `/api/ids/{id}/` | IDS detail with embedded Specifications |
+| PATCH | `/api/ids/{id}/` | Update IDS (owner only) |
+| DELETE | `/api/ids/{id}/` | Delete IDS |
+| GET | `/api/ids/mine/` | Current user's IDSs |
+| POST | `/api/ids/import_file/` | Upload and import `.ids` XML file (multipart) |
+| GET | `/api/ids/{id}/download/` | Download IDS as `.ids` XML file |
+| GET | `/api/ids/{id}/validate/` | Check if IDS produces valid XML |
+| POST | `/api/ids/{id}/add_specification/` | Attach a Specification |
+| POST | `/api/ids/{id}/remove_specification/` | Detach a Specification |
+| POST | `/api/ids/{id}/copy_to_library/` | Deep-copy IDS + Specs to your library |
+| DELETE | `/api/ids/{id}/delete_with_specifications/` | Delete IDS and all its Specifications |
+| POST/DELETE | `/api/ids/{id}/tags/` | Add or remove a tag |
+
+### Specifications — `/api/specifications/`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/specifications/` | List public Specifications |
+| POST | `/api/specifications/` | Create a new Specification |
+| GET | `/api/specifications/{id}/` | Specification detail |
+| PATCH | `/api/specifications/{id}/` | Update (owner only) |
+| DELETE | `/api/specifications/{id}/` | Delete |
+| GET | `/api/specifications/mine/` | Current user's Specifications |
+| POST | `/api/specifications/{id}/copy_to_library/` | Copy to your library |
+| POST/DELETE | `/api/specifications/{id}/tags/` | Add or remove a tag |
+
+### Other
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/search/?q=` | Search IDSs and Specifications |
+| GET | `/api/tags/` | List all tags |
+| GET/POST | `/api/library/` | User's saved library items |
+
+---
+
+## Data Model
+
+```
+User (accounts)
+ ├── has many → IDS
+ └── has many → Specification
+
+IDS
+ ├── title, copyright_text, version, description
+ ├── author_email, date, purpose, milestone
+ ├── is_public, is_deleted
+ └── many-to-many → Specification (via IDSSpecification with order)
+
+Specification
+ ├── name, ifc_version (IFC2X3 | IFC4 | IFC4X3_ADD2)
+ ├── identifier, description, instructions
+ ├── applicability_data (JSON — array of facet dicts)
+ ├── requirements_data  (JSON — array of facet dicts)
+ └── is_public, is_deleted
+
+Tag
+ ├── name, category (use_case | stage | discipline | other)
+ └── attached to IDSs and Specifications via through tables
+
+UserLibrary
+ └── saves references to IDSs or Specifications per user
+```
+
+### Facet Types
+
+Facets stored in `applicability_data` and `requirements_data` follow the buildingSMART IDS schema:
+
+| Type | Key Fields |
+|---|---|
+| `entity` | `name`, `predefined_type` |
+| `attribute` | `name`, `value` |
+| `property` | `property_set`, `base_name`, `value`, `data_type` |
+| `classification` | `system`, `value` |
+| `material` | `value` |
+| `partof` | `name`, `predefined_type`, `relation` |
+
+---
+
+## IDS Import / Export
+
+### Import (Upload)
+1. User selects a `.ids` or `.xml` file via the Upload button in the Library sidebar
+2. Backend validates the file against the **IDS 1.0 XSD schema** using `xmlschema`
+3. If invalid: returns **all** schema violations with human-readable reasons and XPath locations, displayed in a detailed error dialog
+4. If valid: parses the XML via `ifctester`, creates corresponding IDS and Specification models, links them, and adds them to the user's library
+
+### Export (Download)
+1. Backend converts Django models → ifctester objects (mapping `snake_case` ↔ `camelCase`)
+2. Generates schema-valid XML via `ifctester.Ids.to_string()`
+3. Returns the file as an attachment named `{IDS_Title}.ids`
+
+### Validation During Creation
+When creating or editing Specifications, the serializer validates `applicability_data` and `requirements_data` against the IDS facet structure, ensuring the data can produce valid XML before saving.
+
+---
+
+## Available Commands
+
+### Backend
+
+| Command | Description |
+|---|---|
+| `python manage.py runserver` | Start Django dev server (port 8000) |
+| `python manage.py migrate` | Apply database migrations |
+| `python manage.py seed_data` | Seed DB with demo users, specifications, and IDSs |
+| `python manage.py createsuperuser` | Create a Django admin user |
+
+### Frontend
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server (port 5173) |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+
+---
+
+## Configuration Notes
+
+- **CORS**: Configured for `localhost:5173` and `127.0.0.1:5173` (development only)
+- **API base URL**: Hardcoded to `http://localhost:8000/api/` in `frontend/src/app/api.js`
+- **JWT tokens**: 60-minute access, 7-day refresh, rotating refresh tokens
+- **Database**: SQLite at `backend/db.sqlite3` (swap to PostgreSQL for production)
+- **DEBUG mode**: Enabled — disable and set a proper `SECRET_KEY` for production
+- **Media files**: Profile pictures stored in `backend/media/`
+
+---
+
+## License
+
+This project uses the vendored [IfcTester](https://github.com/IfcOpenShell/IfcOpenShell) library, licensed under LGPL-3.0.
