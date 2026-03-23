@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TagList } from '@/components/TagPill';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
   TooltipContent,
@@ -115,6 +115,9 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
+                    {spec.owner_avatar_url && (
+                      <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                    )}
                     <AvatarFallback style={{ backgroundColor: getAvatarColor(spec.owner_username), color: '#fff' }}>
                       {spec.owner_username.charAt(0).toUpperCase()}
                     </AvatarFallback>

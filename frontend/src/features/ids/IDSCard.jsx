@@ -10,6 +10,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ArrowUp, BadgeCheck } from 'lucide-react';
 import {
   useCopyIDSToLibraryMutation,
@@ -76,8 +82,27 @@ export default function IDSCard({ ids }) {
         <div className="flex items-center gap-2">
           {ids.owner_username && (
             <span className="flex items-center gap-1">
-              by {ids.owner_username}
-              {ids.owner_is_certified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar className="h-6 w-6 cursor-default">
+                    {ids.owner_avatar_url && (
+                      <AvatarImage src={`http://localhost:8000${ids.owner_avatar_url}`} alt={ids.owner_username} />
+                    )}
+                    <AvatarFallback className="text-[10px]">
+                      {ids.owner_username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>{ids.owner_username}</TooltipContent>
+              </Tooltip>
+              {ids.owner_is_certified && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>Certified Creator</TooltipContent>
+                </Tooltip>
+              )}
             </span>
           )}
           <Button

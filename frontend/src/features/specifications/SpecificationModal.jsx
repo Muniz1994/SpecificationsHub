@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Pencil, CheckSquare, Filter, X, BadgeCheck } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetSpecificationDetailQuery } from './specificationsApi';
 
 function FacetPill({ f }) {
@@ -103,10 +104,20 @@ export default function SpecificationModal({ spec: specProp, onClose, onEdit }) 
                 {spec.owner_username && (
                   <>
                     <Separator />
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <span className="font-medium text-foreground">Owner: </span>
-                      {spec.owner_username}
-                      {spec.owner_is_certified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />}
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      {spec.owner_avatar_url && (
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                          <AvatarFallback className="text-[10px]">
+                            {spec.owner_username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium text-foreground">Owner: </span>
+                        {spec.owner_username}
+                        {spec.owner_is_certified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />}
+                      </span>
                     </div>
                   </>
                 )}

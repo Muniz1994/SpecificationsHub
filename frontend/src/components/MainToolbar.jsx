@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '@/features/auth/authSlice';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/assets/logoName.svg';
 import {
   Tooltip,
@@ -90,8 +91,17 @@ export default function MainToolbar() {
         <Separator className="my-1 w-8" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <User className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="rounded-full">
+              {user?.avatar_url ? (
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={`http://localhost:8000${user.avatar_url}`} alt="Avatar" />
+                  <AvatarFallback className="text-xs">
+                    {user.first_name?.[0] || user.username?.[0] || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <User className="h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-48">

@@ -35,6 +35,7 @@ class RequirementSerializer(serializers.ModelSerializer):
 class SpecificationSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     owner_is_certified = serializers.BooleanField(source='owner.is_certified', read_only=True)
+    owner_avatar_url = serializers.SerializerMethodField()
     applicability_conditions = ApplicabilityConditionSerializer(many=True, read_only=True)
     requirements = RequirementSerializer(many=True, read_only=True)
     tags = serializers.SerializerMethodField()
@@ -49,11 +50,16 @@ class SpecificationSerializer(serializers.ModelSerializer):
             'applicability_conditions', 'requirements',
             'tags',
             'endorsement_count', 'is_endorsed',
-            'owner', 'owner_username', 'owner_is_certified',
+            'owner', 'owner_username', 'owner_is_certified', 'owner_avatar_url',
             'is_public', 'is_deleted',
             'created_at', 'updated_at',
         )
         read_only_fields = ('id', 'owner', 'owner_username', 'created_at', 'updated_at')
+
+    def get_owner_avatar_url(self, obj):
+        if obj.owner and obj.owner.avatar:
+            return f'/avatars/{obj.owner.avatar}'
+        return None
 
     def get_tags(self, obj):
         tags = Tag.objects.filter(specification_tags__specification=obj)
@@ -88,15 +94,22 @@ class SpecificationSerializer(serializers.ModelSerializer):
 class SpecificationMiniSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     owner_is_certified = serializers.BooleanField(source='owner.is_certified', read_only=True)
+    owner_avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Specification
-        fields = ('id', 'name', 'ifc_version', 'description', 'owner_username', 'owner_is_certified')
+        fields = ('id', 'name', 'ifc_version', 'description', 'owner_username', 'owner_is_certified', 'owner_avatar_url')
+
+    def get_owner_avatar_url(self, obj):
+        if obj.owner and obj.owner.avatar:
+            return f'/avatars/{obj.owner.avatar}'
+        return None
 
 
 class IDSSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     owner_is_certified = serializers.BooleanField(source='owner.is_certified', read_only=True)
+    owner_avatar_url = serializers.SerializerMethodField()
     specifications = SpecificationMiniSerializer(many=True, read_only=True)
     specifications_count = serializers.IntegerField(source='specifications.count', read_only=True)
     tags = serializers.SerializerMethodField()
@@ -108,7 +121,7 @@ class IDSSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'copyright_text', 'version', 'description',
             'author_email', 'date', 'purpose', 'milestone',
-            'owner', 'owner_username', 'owner_is_certified',
+            'owner', 'owner_username', 'owner_is_certified', 'owner_avatar_url',
             'specifications', 'specifications_count',
             'tags',
             'endorsement_count', 'is_endorsed',
@@ -116,6 +129,11 @@ class IDSSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at',
         )
         read_only_fields = ('id', 'owner', 'owner_username', 'created_at', 'updated_at')
+
+    def get_owner_avatar_url(self, obj):
+        if obj.owner and obj.owner.avatar:
+            return f'/avatars/{obj.owner.avatar}'
+        return None
 
     def get_tags(self, obj):
         tags = Tag.objects.filter(ids_tags__ids=obj)
@@ -136,6 +154,7 @@ class IDSSerializer(serializers.ModelSerializer):
 class IDSListSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     owner_is_certified = serializers.BooleanField(source='owner.is_certified', read_only=True)
+    owner_avatar_url = serializers.SerializerMethodField()
     specifications_count = serializers.IntegerField(source='specifications.count', read_only=True)
     tags = serializers.SerializerMethodField()
     endorsement_count = serializers.SerializerMethodField()
@@ -145,13 +164,18 @@ class IDSListSerializer(serializers.ModelSerializer):
         model = IDS
         fields = (
             'id', 'title', 'version', 'description',
-            'owner', 'owner_username', 'owner_is_certified', 'specifications_count',
+            'owner', 'owner_username', 'owner_is_certified', 'owner_avatar_url', 'specifications_count',
             'tags',
             'endorsement_count', 'is_endorsed',
             'is_public', 'is_deleted',
             'created_at', 'updated_at',
         )
         read_only_fields = ('id', 'owner', 'owner_username', 'created_at', 'updated_at')
+
+    def get_owner_avatar_url(self, obj):
+        if obj.owner and obj.owner.avatar:
+            return f'/avatars/{obj.owner.avatar}'
+        return None
 
     def get_tags(self, obj):
         tags = Tag.objects.filter(ids_tags__ids=obj)
