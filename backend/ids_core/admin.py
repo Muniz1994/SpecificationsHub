@@ -4,6 +4,7 @@ from .models import (
     ApplicabilityCondition, Requirement,
     Tag, IDSTag, SpecificationTag,
     UserLibrary,
+    Endorsement,
 )
 
 
@@ -70,6 +71,13 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(UserLibrary)
 class UserLibraryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'ids', 'specification', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user__username', 'ids__title', 'specification__name')
+
+
+@admin.register(Endorsement)
+class EndorsementAdmin(admin.ModelAdmin):
     list_display = ('user', 'ids', 'specification', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('user__username', 'ids__title', 'specification__name')

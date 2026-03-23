@@ -115,6 +115,22 @@ export const idsApi = api.injectEndpoints({
         { type: 'Specification', id: 'MINE' },
       ],
     }),
+
+    endorseIDS: builder.mutation({
+      query: (id) => ({ url: `ids/${id}/endorse/`, method: 'POST' }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'IDS', id },
+        { type: 'IDS', id: 'LIST' },
+      ],
+    }),
+
+    unendorseIDS: builder.mutation({
+      query: (id) => ({ url: `ids/${id}/endorse/`, method: 'DELETE' }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'IDS', id },
+        { type: 'IDS', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -132,6 +148,8 @@ export const {
   useDeleteIDSWithSpecificationsMutation,
   useValidateIDSQuery,
   useImportIDSFileMutation,
+  useEndorseIDSMutation,
+  useUnendorseIDSMutation,
 } = idsApi;
 
 /**

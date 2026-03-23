@@ -2,13 +2,13 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse
 
 from .ids_export import ids_to_xml_string, validate_ids
 from .ids_import import import_ids_from_xml
 
-from .models import IDS, Specification, Tag, UserLibrary, IDSSpecification
+from .models import IDS, Specification, Tag, UserLibrary, IDSSpecification, Endorsement
 from .serializers import (
     IDSSerializer, IDSListSerializer,
     SpecificationSerializer,
@@ -31,10 +31,14 @@ class SpecificationViewSet(viewsets.ModelViewSet):
     serializer_class = SpecificationSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
-    ordering_fields = ['created_at', 'name']
+    ordering_fields = ['created_at', 'name', 'endorsement_count']
 
     def get_queryset(self):
-        return Specification.objects.filter(is_deleted=False).select_related('owner')
+        return (
+            Specification.objects.filter(is_deleted=False)
+            .select_related('owner')
+            .annotate(endorsement_count=Count('endorsements'))
+        )
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
@@ -107,6 +111,16 @@ class SpecificationViewSet(viewsets.ModelViewSet):
         spec.specification_tags.filter(tag=tag).delete()
         return Response({'detail': 'Tag removed.'})
 
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def endorse(self, request, pk=None):
+        spec = self.get_object()
+        if request.method == 'POST':
+            Endorsement.objects.get_or_create(user=request.user, specification=spec)
+            return Response({'detail': 'Endorsed.'})
+        Endorsement.objects.filter(user=request.user, specification=spec).delete()
+        return Response({'detail': 'Endorsement removed.'})
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
             url_path='copy_to_library')
     def copy_to_library(self, request, pk=None):
@@ -138,10 +152,15 @@ class IDSViewSet(viewsets.ModelViewSet):
     """
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']
-    ordering_fields = ['created_at', 'title']
+    ordering_fields = ['created_at', 'title', 'endorsement_count']
 
     def get_queryset(self):
-        return IDS.objects.filter(is_deleted=False).select_related('owner').prefetch_related('specifications')
+        return (
+            IDS.objects.filter(is_deleted=False)
+            .select_related('owner')
+            .prefetch_related('specifications')
+            .annotate(endorsement_count=Count('endorsements'))
+        )
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -203,6 +222,16 @@ class IDSViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Tag added.'})
         ids_obj.ids_tags.filter(tag=tag).delete()
         return Response({'detail': 'Tag removed.'})
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def endorse(self, request, pk=None):
+        ids_obj = self.get_object()
+        if request.method == 'POST':
+            Endorsement.objects.get_or_create(user=request.user, ids=ids_obj)
+            return Response({'detail': 'Endorsed.'})
+        Endorsement.objects.filter(user=request.user, ids=ids_obj).delete()
+        return Response({'detail': 'Endorsement removed.'})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
             url_path='add_specification')
@@ -401,15 +430,24 @@ class SearchView(viewsets.ViewSet):
         if not query:
             return Response({'ids': [], 'specifications': []})
 
-        ids_qs = IDS.objects.filter(is_deleted=False).filter(
-            Q(title__icontains=query) | Q(description__icontains=query)
-        ).select_related('owner')[:10]
+        ids_qs = (
+            IDS.objects.filter(is_deleted=False)
+            .filter(Q(title__icontains=query) | Q(description__icontains=query))
+            .select_related('owner')
+            .annotate(endorsement_count=Count('endorsements'))
+            .order_by('-endorsement_count')[:10]
+        )
 
-        specs_qs = Specification.objects.filter(is_deleted=False).filter(
-            Q(name__icontains=query) | Q(description__icontains=query)
-        ).select_related('owner')[:10]
+        specs_qs = (
+            Specification.objects.filter(is_deleted=False)
+            .filter(Q(name__icontains=query) | Q(description__icontains=query))
+            .select_related('owner')
+            .annotate(endorsement_count=Count('endorsements'))
+            .order_by('-endorsement_count')[:10]
+        )
 
+        ctx = {'request': request}
         return Response({
-            'ids': IDSListSerializer(ids_qs, many=True).data,
-            'specifications': SpecificationSerializer(specs_qs, many=True).data,
+            'ids': IDSListSerializer(ids_qs, many=True, context=ctx).data,
+            'specifications': SpecificationSerializer(specs_qs, many=True, context=ctx).data,
         })

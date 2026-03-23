@@ -4,6 +4,7 @@ from .models import (
     ApplicabilityCondition, Requirement,
     Tag, IDSTag, SpecificationTag,
     UserLibrary,
+    Endorsement,
 )
 from .ids_export import validate_facet_data
 
@@ -36,6 +37,8 @@ class SpecificationSerializer(serializers.ModelSerializer):
     applicability_conditions = ApplicabilityConditionSerializer(many=True, read_only=True)
     requirements = RequirementSerializer(many=True, read_only=True)
     tags = serializers.SerializerMethodField()
+    endorsement_count = serializers.SerializerMethodField()
+    is_endorsed = serializers.SerializerMethodField()
 
     class Meta:
         model = Specification
@@ -44,6 +47,7 @@ class SpecificationSerializer(serializers.ModelSerializer):
             'applicability_data', 'requirements_data',
             'applicability_conditions', 'requirements',
             'tags',
+            'endorsement_count', 'is_endorsed',
             'owner', 'owner_username',
             'is_public', 'is_deleted',
             'created_at', 'updated_at',
@@ -53,6 +57,17 @@ class SpecificationSerializer(serializers.ModelSerializer):
     def get_tags(self, obj):
         tags = Tag.objects.filter(specification_tags__specification=obj)
         return TagSerializer(tags, many=True).data
+
+    def get_endorsement_count(self, obj):
+        if hasattr(obj, 'endorsement_count'):
+            return obj.endorsement_count
+        return Endorsement.objects.filter(specification=obj).count()
+
+    def get_is_endorsed(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return Endorsement.objects.filter(specification=obj, user=request.user).exists()
+        return False
 
     def validate_applicability_data(self, value):
         """Validate each facet in applicability_data can build a valid ifctester facet."""
@@ -82,6 +97,8 @@ class IDSSerializer(serializers.ModelSerializer):
     specifications = SpecificationMiniSerializer(many=True, read_only=True)
     specifications_count = serializers.IntegerField(source='specifications.count', read_only=True)
     tags = serializers.SerializerMethodField()
+    endorsement_count = serializers.SerializerMethodField()
+    is_endorsed = serializers.SerializerMethodField()
 
     class Meta:
         model = IDS
@@ -91,6 +108,7 @@ class IDSSerializer(serializers.ModelSerializer):
             'owner', 'owner_username',
             'specifications', 'specifications_count',
             'tags',
+            'endorsement_count', 'is_endorsed',
             'is_public', 'is_deleted',
             'created_at', 'updated_at',
         )
@@ -100,11 +118,24 @@ class IDSSerializer(serializers.ModelSerializer):
         tags = Tag.objects.filter(ids_tags__ids=obj)
         return TagSerializer(tags, many=True).data
 
+    def get_endorsement_count(self, obj):
+        if hasattr(obj, 'endorsement_count'):
+            return obj.endorsement_count
+        return Endorsement.objects.filter(ids=obj).count()
+
+    def get_is_endorsed(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return Endorsement.objects.filter(ids=obj, user=request.user).exists()
+        return False
+
 
 class IDSListSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     specifications_count = serializers.IntegerField(source='specifications.count', read_only=True)
     tags = serializers.SerializerMethodField()
+    endorsement_count = serializers.SerializerMethodField()
+    is_endorsed = serializers.SerializerMethodField()
 
     class Meta:
         model = IDS
@@ -112,6 +143,7 @@ class IDSListSerializer(serializers.ModelSerializer):
             'id', 'title', 'version', 'description',
             'owner', 'owner_username', 'specifications_count',
             'tags',
+            'endorsement_count', 'is_endorsed',
             'is_public', 'is_deleted',
             'created_at', 'updated_at',
         )
@@ -120,6 +152,17 @@ class IDSListSerializer(serializers.ModelSerializer):
     def get_tags(self, obj):
         tags = Tag.objects.filter(ids_tags__ids=obj)
         return TagSerializer(tags, many=True).data
+
+    def get_endorsement_count(self, obj):
+        if hasattr(obj, 'endorsement_count'):
+            return obj.endorsement_count
+        return Endorsement.objects.filter(ids=obj).count()
+
+    def get_is_endorsed(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return Endorsement.objects.filter(ids=obj, user=request.user).exists()
+        return False
 
 
 class UserLibrarySerializer(serializers.ModelSerializer):

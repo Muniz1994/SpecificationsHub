@@ -56,6 +56,22 @@ export const specificationsApi = api.injectEndpoints({
       }),
       invalidatesTags: [{ type: 'Specification', id: 'MINE' }],
     }),
+
+    endorseSpecification: builder.mutation({
+      query: (id) => ({ url: `specifications/${id}/endorse/`, method: 'POST' }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'Specification', id },
+        { type: 'Specification', id: 'LIST' },
+      ],
+    }),
+
+    unendorseSpecification: builder.mutation({
+      query: (id) => ({ url: `specifications/${id}/endorse/`, method: 'DELETE' }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'Specification', id },
+        { type: 'Specification', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -67,4 +83,6 @@ export const {
   useUpdateSpecificationMutation,
   useDeleteSpecificationMutation,
   useCopySpecificationToLibraryMutation,
+  useEndorseSpecificationMutation,
+  useUnendorseSpecificationMutation,
 } = specificationsApi;

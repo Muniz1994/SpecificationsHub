@@ -10,11 +10,18 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { TagList } from '@/components/TagPill';
 import { Button } from '@/components/ui/button';
-import { useCopyIDSToLibraryMutation } from '@/features/ids/idsApi';
+import { ArrowUp } from 'lucide-react';
+import {
+  useCopyIDSToLibraryMutation,
+  useEndorseIDSMutation,
+  useUnendorseIDSMutation,
+} from '@/features/ids/idsApi';
 
 export default function IDSCard({ ids }) {
   const navigate = useNavigate();
   const [copyIDS, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+  const [endorseIDS] = useEndorseIDSMutation();
+  const [unendorseIDS] = useUnendorseIDSMutation();
   const [copied, setCopied] = useState(false);
 
   const handleGetIt = async (e) => {
@@ -25,6 +32,19 @@ export default function IDSCard({ ids }) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // silently ignore
+    }
+  };
+
+  const handleEndorse = async (e) => {
+    e.stopPropagation();
+    try {
+      if (ids.is_endorsed) {
+        await unendorseIDS(ids.id).unwrap();
+      } else {
+        await endorseIDS(ids.id).unwrap();
+      }
+    } catch {
+      // ignore
     }
   };
 
@@ -53,8 +73,19 @@ export default function IDSCard({ ids }) {
         <TagList tags={ids.tags} className="mt-2" />
       </CardContent>
       <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
-        <div>
+        <div className="flex items-center gap-2">
           {ids.owner_username && <span>by {ids.owner_username}</span>}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1"
+            onClick={handleEndorse}
+          >
+            <ArrowUp className={`h-4 w-4 ${(ids.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'} ${ids.is_endorsed ? 'stroke-[3]' : ''}`} />
+            <span className={(ids.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'}>
+              {ids.endorsement_count ?? 0}
+            </span>
+          </Button>
         </div>
         <div className="flex items-center gap-3">
           {ids.specifications_count != null && (

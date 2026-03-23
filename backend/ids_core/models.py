@@ -194,3 +194,35 @@ class UserLibrary(models.Model):
     def __str__(self):
         item = self.ids or self.specification
         return f'{self.user.username} → {item}'
+
+
+class Endorsement(models.Model):
+    """Users can endorse (upvote) community IDSs and Specifications."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='endorsements',
+    )
+    ids = models.ForeignKey(
+        IDS, on_delete=models.CASCADE, related_name='endorsements', null=True, blank=True
+    )
+    specification = models.ForeignKey(
+        Specification, on_delete=models.CASCADE, related_name='endorsements', null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'ids'), ('user', 'specification')]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(ids__isnull=False, specification__isnull=True)
+                    | models.Q(ids__isnull=True, specification__isnull=False)
+                ),
+                name='endorsement_exactly_one_target',
+            ),
+        ]
+
+    def __str__(self):
+        item = self.ids or self.specification
+        return f'{self.user.username} endorses {item}'

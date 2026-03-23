@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SearchBox from '@/components/SearchBox';
 import IDSCard from '@/features/ids/IDSCard';
 import { useGetIDSListQuery, useSearchQuery } from '@/features/ids/idsApi';
@@ -11,9 +11,14 @@ export default function CommunityIDSPage() {
     skip: !searchQuery,
   });
 
-  const idsList = searchQuery
+  const rawIdsList = searchQuery
     ? searchResults?.ids || []
     : data?.results || [];
+
+  const idsList = useMemo(
+    () => [...rawIdsList].sort((a, b) => (b.endorsement_count ?? 0) - (a.endorsement_count ?? 0)),
+    [rawIdsList],
+  );
 
   return (
     <div>

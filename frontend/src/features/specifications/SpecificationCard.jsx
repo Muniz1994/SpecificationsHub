@@ -15,7 +15,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useCopySpecificationToLibraryMutation } from '@/features/specifications/specificationsApi';
+import { ArrowUp } from 'lucide-react';
+import {
+  useCopySpecificationToLibraryMutation,
+  useEndorseSpecificationMutation,
+  useUnendorseSpecificationMutation,
+} from '@/features/specifications/specificationsApi';
 
 const AVATAR_COLORS = [
   '#6b8e8e', // muted teal
@@ -40,6 +45,8 @@ function getAvatarColor(name) {
 
 export default function SpecificationCard({ spec, onClick, hideAddButton = false }) {
   const [copySpec, { isLoading: isCopying }] = useCopySpecificationToLibraryMutation();
+  const [endorse] = useEndorseSpecificationMutation();
+  const [unendorse] = useUnendorseSpecificationMutation();
   const [copied, setCopied] = useState(false);
 
   const handleGetIt = async (e) => {
@@ -50,6 +57,19 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // silently ignore (e.g. already owned)
+    }
+  };
+
+  const handleEndorse = async (e) => {
+    e.stopPropagation();
+    try {
+      if (spec.is_endorsed) {
+        await unendorse(spec.id).unwrap();
+      } else {
+        await endorse(spec.id).unwrap();
+      }
+    } catch {
+      // ignore
     }
   };
   return (
@@ -89,8 +109,8 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
         )}
       </CardContent>
       {spec.owner_username && (
-        <CardFooter className="text-xs text-muted-foreground pt-0">
-                    {spec.owner_username && (
+        <CardFooter className="text-xs text-muted-foreground pt-0 flex justify-between items-center">
+          {spec.owner_username && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
@@ -102,6 +122,17 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
               <TooltipContent>{spec.owner_username}</TooltipContent>
             </Tooltip>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1"
+            onClick={handleEndorse}
+          >
+            <ArrowUp className={`h-4 w-4 ${(spec.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'} ${spec.is_endorsed ? 'stroke-[3]' : ''}`} />
+            <span className={(spec.endorsement_count ?? 0) > 0 ? 'text-green-500' : 'text-muted-foreground'}>
+              {spec.endorsement_count ?? 0}
+            </span>
+          </Button>
         </CardFooter>
       )}
     </Card>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SearchBox from '@/components/SearchBox';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
@@ -14,9 +14,14 @@ export default function CommunitySpecsPage() {
     skip: !searchQuery,
   });
 
-  const specs = searchQuery
+  const rawSpecs = searchQuery
     ? searchResults?.specifications || []
     : data?.results || [];
+
+  const specs = useMemo(
+    () => [...rawSpecs].sort((a, b) => (b.endorsement_count ?? 0) - (a.endorsement_count ?? 0)),
+    [rawSpecs],
+  );
 
   return (
     <div>
