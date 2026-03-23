@@ -34,11 +34,17 @@ class SpecificationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name', 'endorsement_count']
 
     def get_queryset(self):
-        return (
+        qs = (
             Specification.objects.filter(is_deleted=False)
             .select_related('owner')
             .annotate(endorsement_count=Count('endorsements'))
         )
+        tags = self.request.query_params.get('tags')
+        if tags:
+            tag_ids = [int(t) for t in tags.split(',') if t.strip().isdigit()]
+            if tag_ids:
+                qs = qs.filter(specification_tags__tag_id__in=tag_ids).distinct()
+        return qs
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
@@ -155,12 +161,18 @@ class IDSViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'title', 'endorsement_count']
 
     def get_queryset(self):
-        return (
+        qs = (
             IDS.objects.filter(is_deleted=False)
             .select_related('owner')
             .prefetch_related('specifications')
             .annotate(endorsement_count=Count('endorsements'))
         )
+        tags = self.request.query_params.get('tags')
+        if tags:
+            tag_ids = [int(t) for t in tags.split(',') if t.strip().isdigit()]
+            if tag_ids:
+                qs = qs.filter(ids_tags__tag_id__in=tag_ids).distinct()
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'list':
