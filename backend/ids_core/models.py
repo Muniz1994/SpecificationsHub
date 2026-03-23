@@ -38,6 +38,9 @@ class Specification(models.Model):
         related_name='specifications_set',
     )
 
+    is_deleted = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -79,6 +82,9 @@ class IDS(models.Model):
         related_name='ids_set',
     )
 
+    is_deleted = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,6 +105,7 @@ class IDSSpecification(models.Model):
     ids = models.ForeignKey(IDS, on_delete=models.CASCADE)
     specification = models.ForeignKey(Specification, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['order']

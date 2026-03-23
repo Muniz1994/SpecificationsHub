@@ -1,9 +1,9 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 
-from .models import IDS, Specification
+from .models import IDS, Specification, IDSSpecification
 from .serializers import (
     IDSSerializer,
     IDSListSerializer,
@@ -73,6 +73,55 @@ class IDSViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = IDSListSerializer(qs, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'],
+            permission_classes=[permissions.IsAuthenticated])
+    def copy_to_library(self, request, pk=None):
+        """Copy this IDS and its specifications to the user's library."""
+        ids_obj = self.get_object()
+        user = request.user
+
+        # Create a copy of the IDS for the user
+        new_ids = IDS.objects.create(
+            title=ids_obj.title,
+            copyright_text=ids_obj.copyright_text,
+            version=ids_obj.version,
+            description=ids_obj.description,
+            author_email=ids_obj.author_email,
+            date=ids_obj.date,
+            purpose=ids_obj.purpose,
+            milestone=ids_obj.milestone,
+            owner=user,
+            is_deleted=False,
+            is_public=False
+        )
+
+        # Copy all specifications to the user and link them to the new IDS
+        for ids_spec in IDSSpecification.objects.filter(ids=ids_obj):
+            orig_spec = ids_spec.specification
+            # Create a copy of the specification for the user
+            new_spec = Specification.objects.create(
+                name=orig_spec.name,
+                ifc_version=orig_spec.ifc_version,
+                identifier=orig_spec.identifier,
+                description=orig_spec.description,
+                instructions=orig_spec.instructions,
+                applicability_data=orig_spec.applicability_data,
+                requirements_data=orig_spec.requirements_data,
+                owner=user,
+                is_deleted=False,
+                is_public=False
+            )
+            # Link the new specification to the new IDS
+            IDSSpecification.objects.create(
+                ids=new_ids,
+                specification=new_spec,
+                order=ids_spec.order,
+                is_active=ids_spec.is_active
+            )
+
+        serializer = self.get_serializer(new_ids)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SearchView(viewsets.ViewSet):

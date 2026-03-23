@@ -1,16 +1,39 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import { useCopyIDSToLibraryMutation } from '@/features/ids/idsApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function IDSPage() {
   const { id } = useParams();
   const { data: ids, isLoading, error } = useGetIDSDetailQuery(id);
   const [selectedSpec, setSelectedSpec] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+
+  const handleGetIDS = async () => {
+    try {
+      await copyIDSToLibrary(id).unwrap();
+      setShowConfirmModal(false);
+      alert('IDS and specifications added to your library!');
+    } catch (err) {
+      alert('Failed to add IDS to library. Please try again.');
+      console.error(err);
+    }
+  };
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (error) return <p className="text-destructive">Failed to load IDS.</p>;
@@ -18,9 +41,12 @@ export default function IDSPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-baseline gap-3 mb-4">
-        <h1 className="text-2xl font-bold">{ids.title}</h1>
-        {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+      <div className="flex items-baseline justify-between gap-3 mb-4">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-bold">{ids.title}</h1>
+          {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+        </div>
+        <Button onClick={() => setShowConfirmModal(true)}>Get IDS</Button>
       </div>
 
       <Card className="mb-8">
@@ -74,6 +100,29 @@ export default function IDSPage() {
         spec={selectedSpec}
         onClose={() => setSelectedSpec(null)}
       />
+
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add IDS to Library</DialogTitle>
+            <DialogDescription>
+              A local copy of this IDS and all its specifications will be added to your library. You'll be able to access them anytime in your User Library.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmModal(false)}
+              disabled={isCopying}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleGetIDS} disabled={isCopying}>
+              {isCopying ? 'Adding...' : 'OK'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -36,6 +36,15 @@ export const idsApi = api.injectEndpoints({
         params: { q },
       }),
     }),
+
+    // Copy IDS to user library
+    copyIDSToLibrary: builder.mutation({
+      query: (id) => ({
+        url: `ids/${id}/copy_to_library/`,
+        method: 'POST',
+      }),
+      invalidatesTags: [{ type: 'IDS', id: 'MINE' }],
+    }),
   }),
 });
 
@@ -44,4 +53,5 @@ export const {
   useGetIDSDetailQuery,
   useGetMyIDSQuery,
   useSearchQuery,
+  useCopyIDSToLibraryMutation,
 } = idsApi;

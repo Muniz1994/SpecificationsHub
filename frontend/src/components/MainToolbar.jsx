@@ -26,9 +26,12 @@ export default function MainToolbar() {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
 
-  const buttons = [
+  const communityButtons = [
     { icon: FileText, path: '/specifications', title: 'Community Specifications' },
     { icon: Layers, path: '/ids', title: 'Community IDSs' },
+  ];
+
+  const toolButtons = [
     { icon: PenTool, path: '/editor', title: 'IDS Editor' },
     { icon: Library, path: '/library', title: 'User Library' },
   ];
@@ -48,7 +51,22 @@ export default function MainToolbar() {
           onClick={() => navigate('/dashboard')}
         />
         <div className="flex flex-col items-center gap-1">
-        {buttons.map((btn) => (
+        {communityButtons.map((btn) => (
+          <Tooltip key={btn.path}>
+            <TooltipTrigger asChild>
+              <Button
+                variant={location.pathname === btn.path ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => navigate(btn.path)}
+              >
+                <btn.icon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">{btn.title}</TooltipContent>
+          </Tooltip>
+        ))}
+        <Separator className="my-1 w-8" />
+        {toolButtons.map((btn) => (
           <Tooltip key={btn.path}>
             <TooltipTrigger asChild>
               <Button

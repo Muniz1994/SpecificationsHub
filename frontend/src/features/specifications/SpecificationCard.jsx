@@ -6,6 +6,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function SpecificationCard({ spec, onClick }) {
   return (
@@ -27,7 +33,16 @@ export default function SpecificationCard({ spec, onClick }) {
               : 'No description'}
           </p>
           {spec.owner_username && (
-            <p className="text-xs text-muted-foreground">by {spec.owner_username}</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Avatar size="md" className="cursor-default">
+                  <AvatarFallback>
+                    {spec.owner_username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent>{spec.owner_username}</TooltipContent>
+            </Tooltip>
           )}
         </div>
         <Button 
