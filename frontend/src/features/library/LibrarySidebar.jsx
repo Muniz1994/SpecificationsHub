@@ -22,7 +22,7 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedIDSToDelete, setSelectedIDSToDelete] = useState(null);
   const { data: specsData } = useGetMySpecificationsQuery();
-  const mySpecs = specsData?.results || [];
+  const mySpecs = Array.isArray(specsData) ? specsData : specsData?.results || [];
 
   const isDeleting = isDeletingIDS || isDeletingSpec;
 
