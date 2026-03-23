@@ -45,6 +45,15 @@ export const idsApi = api.injectEndpoints({
       }),
       invalidatesTags: [{ type: 'IDS', id: 'MINE' }],
     }),
+
+    // Delete IDS
+    deleteIDS: builder.mutation({
+      query: (id) => ({
+        url: `ids/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'IDS', id: 'MINE' }],
+    }),
   }),
 });
 
@@ -54,4 +63,5 @@ export const {
   useGetMyIDSQuery,
   useSearchQuery,
   useCopyIDSToLibraryMutation,
+  useDeleteIDSMutation,
 } = idsApi;
