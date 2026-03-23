@@ -1,28 +1,56 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
-import { useCopyIDSToLibraryMutation } from '@/features/ids/idsApi';
+import { useSelector } from 'react-redux';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
+import { selectCurrentUser } from '@/features/auth/authSlice';
+import {
+  useGetIDSDetailQuery,
+  useRemoveSpecificationFromIDSMutation,
+  useCopyIDSToLibraryMutation,
+  downloadIDSFile,
+} from '@/features/ids/idsApi';
+import { Trash2, Download } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 export default function IDSPage() {
   const { id } = useParams();
   const { data: ids, isLoading, error } = useGetIDSDetailQuery(id);
+  const currentUser = useSelector(selectCurrentUser);
+  const [removeSpec] = useRemoveSpecificationFromIDSMutation();
+  const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+  const [downloading, setDownloading] = useState(false);
+  const accessToken = useSelector((s) => s.auth.accessToken);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadIDSFile(id, accessToken);
+    } catch (e) {
+      alert(e.message || 'Download failed');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (error) return <p className="text-destructive">Failed to load IDS.</p>;
+  if (!ids) return null;
+
+  const isOwner = currentUser && ids.owner === currentUser.id;
+
+  const handleRemoveSpec = async (specId) => {
+    await removeSpec({ idsId: ids.id, specificationId: specId });
+  };
 
   const handleGetIDS = async () => {
     try {
@@ -35,18 +63,21 @@ export default function IDSPage() {
     }
   };
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
-  if (error) return <p className="text-destructive">Failed to load IDS.</p>;
-  if (!ids) return null;
-
   return (
     <div className="max-w-4xl">
-      <div className="flex items-baseline justify-between gap-3 mb-4">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-bold">{ids.title}</h1>
-          {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+      <div className="flex items-center gap-3 mb-4">
+        <h1 className="text-2xl font-bold">{ids.title}</h1>
+        {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
+            <Download className="h-3.5 w-3.5 mr-1" /> {downloading ? 'Downloading…' : 'Download .ids'}
+          </Button>
+          {!isOwner && (
+            <Button size="sm" onClick={() => setShowConfirmModal(true)}>
+              Get IDS
+            </Button>
+          )}
         </div>
-        <Button onClick={() => setShowConfirmModal(true)}>Get IDS</Button>
       </div>
 
       <Card className="mb-8">
@@ -54,23 +85,12 @@ export default function IDSPage() {
           {ids.description && (
             <p className="text-sm text-muted-foreground">{ids.description}</p>
           )}
-
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            {ids.author_email && (
-              <span><strong className="text-foreground">Author:</strong> {ids.author_email}</span>
-            )}
-            {ids.date && (
-              <span><strong className="text-foreground">Date:</strong> {ids.date}</span>
-            )}
-            {ids.purpose && (
-              <span><strong className="text-foreground">Purpose:</strong> {ids.purpose}</span>
-            )}
-            {ids.milestone && (
-              <span><strong className="text-foreground">Milestone:</strong> {ids.milestone}</span>
-            )}
-            {ids.copyright_text && (
-              <span><strong className="text-foreground">Copyright:</strong> {ids.copyright_text}</span>
-            )}
+            {ids.author_email && <span><strong className="text-foreground">Author:</strong> {ids.author_email}</span>}
+            {ids.date && <span><strong className="text-foreground">Date:</strong> {ids.date}</span>}
+            {ids.purpose && <span><strong className="text-foreground">Purpose:</strong> {ids.purpose}</span>}
+            {ids.milestone && <span><strong className="text-foreground">Milestone:</strong> {ids.milestone}</span>}
+            {ids.copyright_text && <span><strong className="text-foreground">Copyright:</strong> {ids.copyright_text}</span>}
           </div>
         </CardContent>
       </Card>
@@ -81,14 +101,22 @@ export default function IDSPage() {
         <h2 className="text-xl font-semibold mb-4">
           Specifications ({ids.specifications?.length || 0})
         </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ids.specifications && ids.specifications.length > 0 ? (
             ids.specifications.map((spec) => (
-              <SpecificationCard
-                key={spec.id}
-                spec={spec}
-                onClick={setSelectedSpec}
-              />
+              <div key={spec.id} className="relative group">
+                <SpecificationCard spec={spec} onClick={setSelectedSpec} />
+                {isOwner && (
+                  <button
+                    className="absolute top-2 right-2 hidden group-hover:flex items-center justify-center h-6 w-6 rounded-full bg-destructive text-destructive-foreground"
+                    title="Remove from IDS"
+                    onClick={() => handleRemoveSpec(spec.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
             ))
           ) : (
             <p className="text-muted-foreground italic">No specifications in this IDS.</p>
@@ -96,25 +124,18 @@ export default function IDSPage() {
         </div>
       </section>
 
-      <SpecificationModal
-        spec={selectedSpec}
-        onClose={() => setSelectedSpec(null)}
-      />
+      <SpecificationModal spec={selectedSpec} onClose={() => setSelectedSpec(null)} />
 
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add IDS to Library</DialogTitle>
             <DialogDescription>
-              A local copy of this IDS and all its specifications will be added to your library. You'll be able to access them anytime in your User Library.
+              A local copy of this IDS and all its specifications will be added to your library.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowConfirmModal(false)}
-              disabled={isCopying}
-            >
+            <Button variant="outline" onClick={() => setShowConfirmModal(false)} disabled={isCopying}>
               Cancel
             </Button>
             <Button onClick={handleGetIDS} disabled={isCopying}>

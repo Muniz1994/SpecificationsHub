@@ -20,18 +20,11 @@ export default function CommunitySpecsPage() {
           <p className="text-muted-foreground italic">No specifications available.</p>
         )}
         {specs.map((spec) => (
-          <SpecificationCard
-            key={spec.id}
-            spec={spec}
-            onClick={setSelectedSpec}
-          />
+          <SpecificationCard key={spec.id} spec={spec} onClick={setSelectedSpec} />
         ))}
       </div>
 
-      <SpecificationModal
-        spec={selectedSpec}
-        onClose={() => setSelectedSpec(null)}
-      />
+      <SpecificationModal spec={selectedSpec} onClose={() => setSelectedSpec(null)} />
     </div>
   );
 }

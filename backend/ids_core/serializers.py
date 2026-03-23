@@ -5,6 +5,7 @@ from .models import (
     Tag, IDSTag, SpecificationTag,
     UserLibrary,
 )
+from .ids_export import validate_facet_data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -53,11 +54,27 @@ class SpecificationSerializer(serializers.ModelSerializer):
         tags = Tag.objects.filter(specification_tags__specification=obj)
         return TagSerializer(tags, many=True).data
 
+    def validate_applicability_data(self, value):
+        """Validate each facet in applicability_data can build a valid ifctester facet."""
+        errors = validate_facet_data(value, label="applicability_data")
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
+    def validate_requirements_data(self, value):
+        """Validate each facet in requirements_data can build a valid ifctester facet."""
+        errors = validate_facet_data(value, label="requirements_data")
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
 
 class SpecificationMiniSerializer(serializers.ModelSerializer):
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+
     class Meta:
         model = Specification
-        fields = ('id', 'name', 'ifc_version', 'description')
+        fields = ('id', 'name', 'ifc_version', 'description', 'owner_username')
 
 
 class IDSSerializer(serializers.ModelSerializer):
