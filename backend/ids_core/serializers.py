@@ -3,7 +3,6 @@ from .models import Specification, IDS, IDSSpecification
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
-    """Serializer for Specification — used in lists and detail views."""
     owner_username = serializers.CharField(source='owner.username', read_only=True)
 
     class Meta:
@@ -17,14 +16,14 @@ class SpecificationSerializer(serializers.ModelSerializer):
 
 
 class SpecificationMiniSerializer(serializers.ModelSerializer):
-    """Compact serializer used when nesting specifications inside an IDS."""
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+
     class Meta:
         model = Specification
-        fields = ('id', 'name', 'ifc_version', 'description')
+        fields = ('id', 'name', 'ifc_version', 'description', 'owner_username')
 
 
 class IDSSerializer(serializers.ModelSerializer):
-    """Serializer for IDS — includes nested specifications (read-only)."""
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     specifications = SpecificationMiniSerializer(many=True, read_only=True)
     specifications_count = serializers.IntegerField(
@@ -44,7 +43,6 @@ class IDSSerializer(serializers.ModelSerializer):
 
 
 class IDSListSerializer(serializers.ModelSerializer):
-    """Lighter serializer for IDS lists (no nested specs)."""
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     specifications_count = serializers.IntegerField(
         source='specifications.count', read_only=True
