@@ -5,8 +5,8 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import LibrarySidebar from '@/features/library/LibrarySidebar';
-import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
-import { useGetLibraryQuery, useRemoveFromLibraryMutation } from '@/features/library/libraryApi';
+import { useGetIDSDetailQuery, useGetMyIDSQuery, useDeleteIDSMutation } from '@/features/ids/idsApi';
+import { useGetMySpecificationsQuery, useDeleteSpecificationMutation, useGetSpecificationDetailQuery } from '@/features/specifications/specificationsApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
 import { Badge } from '@/components/ui/badge';
@@ -77,20 +77,39 @@ function IDSDetail({ idsId, onRemove }) {
 }
 
 export default function UserLibraryPage() {
-  const { data: libraryData } = useGetLibraryQuery();
-  const [removeFromLibrary] = useRemoveFromLibraryMutation();
+  const { data: myIDSData } = useGetMyIDSQuery();
+  const { data: mySpecsData } = useGetMySpecificationsQuery();
+  const [deleteIDS] = useDeleteIDSMutation();
+  const [deleteSpec] = useDeleteSpecificationMutation();
   const [selectedEntryId, setSelectedEntryId] = useState(null);
+  const [selectedSpecId, setSelectedSpecId] = useState(null);
+  const [activeTab, setActiveTab] = useState('ids');
 
-  const entries = libraryData?.results || libraryData || [];
-  const idEntries = entries.filter((e) => e.ids != null);
-  const idsList = idEntries.map((e) => ({ ...e.ids_detail, _libraryId: e.id }));
+  const idsList = Array.isArray(myIDSData) ? myIDSData : myIDSData?.results || [];
+  const specsList = Array.isArray(mySpecsData) ? mySpecsData : mySpecsData?.results || [];
+  const selectedIDS = idsList.find((ids) => ids.id === selectedEntryId);
+  const selectedSpecification = specsList.find((spec) => spec.id === selectedSpecId);
 
-  const selectedEntry = idEntries.find((e) => e.ids_detail?.id === selectedEntryId);
+  const handleRemoveIDS = async () => {
+    if (!selectedIDS) return;
+    try {
+      await deleteIDS(selectedIDS.id).unwrap();
+      setSelectedEntryId(null);
+    } catch (err) {
+      alert('Failed to remove IDS from library.');
+      console.error(err);
+    }
+  };
 
-  const handleRemove = async () => {
-    if (!selectedEntry) return;
-    await removeFromLibrary(selectedEntry.id);
-    setSelectedEntryId(null);
+  const handleRemoveSpec = async () => {
+    if (!selectedSpecification) return;
+    try {
+      await deleteSpec(selectedSpecification.id).unwrap();
+      setSelectedSpecId(null);
+    } catch (err) {
+      alert('Failed to remove specification from library.');
+      console.error(err);
+    }
   };
 
   return (
@@ -98,16 +117,96 @@ export default function UserLibraryPage() {
       <ResizablePanel defaultSize={20} minSize={15} maxSize={25} data-panel>
         <LibrarySidebar
           idsList={idsList}
-          selectedId={selectedIdsId}
-          onSelectIDS={setSelectedIdsId}
+          selectedId={selectedEntryId}
+          onSelectIDS={(id) => {
+            setSelectedEntryId(id);
+            setSelectedSpecId(null);
+          }}
+          selectedSpec={selectedSpecId}
+          onSelectSpec={(id) => {
+            setSelectedSpecId(id);
+            setSelectedEntryId(null);
+          }}
         />
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={80} minSize={75} maxSize={85} data-panel>
         <div className="flex-1 p-6">
-          <IDSDetail idsId={selectedIdsId} />
+          {selectedEntryId ? (
+            <IDSDetail idsId={selectedEntryId} onRemove={handleRemoveIDS} />
+          ) : selectedSpecId ? (
+            <SpecificationDetail specId={selectedSpecId} onRemove={handleRemoveSpec} />
+          ) : (
+            <p className="text-muted-foreground mt-10 text-center">
+              Select an item from the sidebar.
+            </p>
+          )}
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
+  );
+}
+
+function SpecificationDetail({ specId, onRemove }) {
+  const { data: spec, isLoading } = useGetSpecificationDetailQuery(specId, { skip: !specId });
+
+  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (!spec) return null;
+
+  return (
+    <div className="max-w-4xl">
+      <div className="flex items-baseline gap-3 mb-4">
+        <h1 className="text-2xl font-bold">{spec.name}</h1>
+        <Badge variant="secondary">{spec.ifc_version}</Badge>
+        {spec.tags && spec.tags.map((tag) => (
+          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
+        ))}
+        <Button variant="ghost" size="sm" className="ml-auto text-destructive" onClick={onRemove}>
+          Remove from library
+        </Button>
+      </div>
+
+      <Card className="mb-6">
+        <CardContent className="pt-6 space-y-3">
+          {spec.description && (
+            <p className="text-sm text-muted-foreground">{spec.description}</p>
+          )}
+          {spec.instructions && (
+            <div>
+              <h3 className="font-semibold text-sm mb-1">Instructions</h3>
+              <p className="text-sm text-muted-foreground">{spec.instructions}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Separator className="my-6" />
+
+      {spec.applicability_conditions && spec.applicability_conditions.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">Applicability</h2>
+          <div className="space-y-2">
+            {spec.applicability_conditions.map((cond) => (
+              <div key={cond.id} className="text-sm p-2 bg-muted rounded">
+                <strong>{cond.type}</strong>: {cond.key} {cond.operator} {cond.value}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {spec.requirements && spec.requirements.length > 0 && (
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Requirements</h2>
+          <div className="space-y-2">
+            {spec.requirements.map((req) => (
+              <div key={req.id} className="text-sm p-2 bg-muted rounded">
+                <strong>{req.property_set}.{req.property_name}</strong> ({req.constraint_type}): {req.value}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
   );
 }

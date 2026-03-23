@@ -242,7 +242,7 @@ class Command(BaseCommand):
             spec, created = Specification.objects.get_or_create(
                 name=sd['name'],
                 owner=sd['owner'],
-                defaults=sd,
+                defaults={**sd, 'is_public': True, 'is_deleted': False},
             )
             if created:
                 self.stdout.write(f'  Created specification: {spec.name}')
@@ -354,7 +354,7 @@ class Command(BaseCommand):
             ids_obj, created = IDS.objects.get_or_create(
                 title=idata['title'],
                 owner=idata['owner'],
-                defaults=idata,
+                defaults={**idata, 'is_public': True, 'is_deleted': False},
             )
             if created:
                 self.stdout.write(f'  Created IDS: {ids_obj.title}')

@@ -27,9 +27,6 @@ class Specification(models.Model):
     is_public = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 
-    is_deleted = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -64,9 +61,6 @@ class IDS(models.Model):
     )
     is_public = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
-
-    is_deleted = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

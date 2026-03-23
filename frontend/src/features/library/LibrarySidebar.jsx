@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
+export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selectedSpec, onSelectSpec }) {
   const [activeTab, setActiveTab] = useState('ids');
   const [deleteIDS, { isLoading: isDeletingIDS }] = useDeleteIDSMutation();
   const [deleteSpec, { isLoading: isDeletingSpec }] = useDeleteSpecificationMutation();
@@ -112,9 +112,13 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS }) {
                 mySpecs.map((spec) => (
                   <li key={spec.id} className="flex items-center gap-2">
                     <Button
-                      variant="ghost"
+                      variant={selectedSpec === spec.id ? 'secondary' : 'ghost'}
                       size="sm"
-                      className="flex-1 justify-start text-left"
+                      className={cn(
+                        'flex-1 justify-start text-left',
+                        selectedSpec === spec.id && 'font-medium'
+                      )}
+                      onClick={() => onSelectSpec(spec.id)}
                       title={spec.description || 'No description'}
                     >
                       {spec.name}
