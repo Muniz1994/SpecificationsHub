@@ -1,10 +1,12 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from django.db.models import Q
 from django.http import HttpResponse
 
 from .ids_export import ids_to_xml_string, validate_ids
+from .ids_import import import_ids_from_xml
 
 from .models import IDS, Specification, Tag, UserLibrary, IDSSpecification
 from .serializers import (
@@ -268,6 +270,71 @@ class IDSViewSet(viewsets.ModelViewSet):
             )
 
         return Response(IDSSerializer(new_ids, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    # ── Import ───────────────────────────────────────────────────────────
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='import_file', parser_classes=[MultiPartParser])
+    def import_file(self, request):
+        """Upload and import an .ids (XML) file.
+
+        Validates the file against the IDS 1.0 XSD schema before creating
+        the IDS and its Specifications in the database.
+        """
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return Response(
+                {'detail': 'No file provided. Send a multipart form with a "file" field.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            xml_string = uploaded.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return Response(
+                {'detail': 'File is not valid UTF-8 encoded XML.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from ifctester.ids import IdsXmlValidationError
+        try:
+            ids_model, warnings = import_ids_from_xml(xml_string, request.user)
+        except IdsXmlValidationError as e:
+            # Extract detailed per-error info from the XML schema validation
+            detail_errors = []
+            xml_err = e.xml_error
+            # Try iter_errors for multiple detailed errors
+            try:
+                from ifctester.ids import get_schema
+                schema = get_schema()
+                for err in schema.iter_errors(xml_string):
+                    detail_errors.append({
+                        'reason': str(getattr(err, 'reason', None) or err),
+                        'path': getattr(err, 'path', None) or '',
+                    })
+            except Exception:
+                pass
+            # Fallback: use the single wrapped error if iter_errors found nothing
+            if not detail_errors and xml_err:
+                detail_errors.append({
+                    'reason': str(getattr(xml_err, 'reason', None) or xml_err),
+                    'path': getattr(xml_err, 'path', None) or '',
+                })
+            return Response(
+                {'detail': 'The uploaded file does not comply with the IDS schema.',
+                 'errors': detail_errors},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        except Exception as e:
+            return Response(
+                {'detail': f'Import failed: {e}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = IDSSerializer(ids_model, context={'request': request}).data
+        if warnings:
+            data['import_warnings'] = warnings
+        return Response(data, status=status.HTTP_201_CREATED)
 
     # ── Download & Validate ─────────────────────────────────────────────
 

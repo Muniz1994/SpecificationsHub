@@ -94,6 +94,24 @@ export const idsApi = api.injectEndpoints({
     validateIDS: builder.query({
       query: (id) => `ids/${id}/validate/`,
     }),
+
+    // Import an .ids (XML) file
+    importIDSFile: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return {
+          url: 'ids/import_file/',
+          method: 'POST',
+          body: formData,
+        };
+      },
+      invalidatesTags: [
+        { type: 'IDS', id: 'LIST' },
+        { type: 'IDS', id: 'MINE' },
+        { type: 'Specification', id: 'MINE' },
+      ],
+    }),
   }),
 });
 
@@ -110,6 +128,7 @@ export const {
   useDeleteIDSMutation,
   useDeleteIDSWithSpecificationsMutation,
   useValidateIDSQuery,
+  useImportIDSFileMutation,
 } = idsApi;
 
 /**

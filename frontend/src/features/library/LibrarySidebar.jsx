@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Trash2, Plus } from 'lucide-react';
-import { useDeleteIDSMutation, useDeleteIDSWithSpecificationsMutation } from '@/features/ids/idsApi';
+import { Trash2, Plus, Upload, AlertTriangle } from 'lucide-react';
+import { useDeleteIDSMutation, useDeleteIDSWithSpecificationsMutation, useImportIDSFileMutation } from '@/features/ids/idsApi';
 import { useGetMySpecificationsQuery, useDeleteSpecificationMutation } from '@/features/specifications/specificationsApi';
 import {
   Dialog,
@@ -21,7 +21,10 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
   const [deleteIDS, { isLoading: isDeletingIDS }] = useDeleteIDSMutation();
   const [deleteIDSWithSpecs, { isLoading: isDeletingIDSWithSpecs }] = useDeleteIDSWithSpecificationsMutation();
   const [deleteSpec, { isLoading: isDeletingSpec }] = useDeleteSpecificationMutation();
+  const [importIDSFile, { isLoading: isImporting }] = useImportIDSFileMutation();
+  const fileInputRef = useRef(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [importErrors, setImportErrors] = useState(null);
   const [selectedIDSToDelete, setSelectedIDSToDelete] = useState(null);
   const [alsoDeleteSpecs, setAlsoDeleteSpecs] = useState(false);
   const { data: specsData } = useGetMySpecificationsQuery();
@@ -55,8 +58,34 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
       console.error(err);
     }
   };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await importIDSFile(file).unwrap();
+    } catch (err) {
+      const data = err?.data;
+      setImportErrors({
+        detail: data?.detail || 'Import failed. The file may not be a valid .ids file.',
+        errors: Array.isArray(data?.errors) ? data.errors : [],
+        fileName: file.name,
+      });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <aside className="min-h-full shrink-0 border-r bg-card p-4 flex flex-col">
+      {/* Hidden file input for .ids import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".ids,.xml"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
       <div className="flex items-center gap-2 mb-4">
         <Button
           variant={activeTab === 'ids' ? 'default' : 'outline'}
@@ -72,10 +101,22 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
         >
           My Specifications
         </Button>
+        {activeTab === 'ids' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 ml-auto"
+            title="Import .ids file"
+            disabled={isImporting}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 w-8 p-0 ml-auto"
+          className={cn('h-8 w-8 p-0', activeTab !== 'ids' && 'ml-auto')}
           title={activeTab === 'ids' ? 'New IDS' : 'New Specification'}
           onClick={activeTab === 'ids' ? onNewIDS : onNewSpec}
         >
@@ -190,6 +231,38 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import validation errors dialog */}
+      <Dialog open={!!importErrors} onOpenChange={(o) => { if (!o) setImportErrors(null); }}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              IDS Schema Validation Failed
+            </DialogTitle>
+            <DialogDescription>
+              The file <span className="font-medium text-foreground">{importErrors?.fileName}</span> does not comply with the IDS 1.0 schema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {importErrors?.errors?.length > 0 ? (
+              importErrors.errors.map((err, i) => (
+                <div key={i} className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm space-y-1">
+                  <p className="font-medium text-destructive">{typeof err === 'string' ? err : err.reason}</p>
+                  {typeof err === 'object' && err.path && (
+                    <p className="text-xs text-muted-foreground font-mono">Path: {err.path}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">{importErrors?.detail}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportErrors(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
