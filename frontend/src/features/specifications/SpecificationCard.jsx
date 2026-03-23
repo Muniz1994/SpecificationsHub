@@ -72,7 +72,7 @@ export default function SpecificationCard({ spec, onClick }) {
           disabled={isCopying}
           onClick={handleGetIt}
         >
-          {copied ? 'Added!' : isCopying ? '…' : 'Get it!'}
+          {copied ? 'Added!' : isCopying ? '…' : 'Add to Library'}
         </Button>
       </CardContent>
       {spec.owner_username && (

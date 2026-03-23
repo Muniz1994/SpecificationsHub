@@ -75,7 +75,7 @@ export default function IDSCard({ ids }) {
             disabled={isCopying}
             onClick={handleGetIt}
           >
-            {copied ? 'Added!' : isCopying ? '…' : 'Get it!'}
+            {copied ? 'Added!' : isCopying ? '…' : 'Add to Library'}
           </Button>
         </div>
       </CardFooter>
