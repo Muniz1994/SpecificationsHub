@@ -46,15 +46,6 @@ export const specificationsApi = api.injectEndpoints({
         { type: 'Specification', id: 'MINE' },
       ],
     }),
-
-    // Delete specification
-    deleteSpecification: builder.mutation({
-      query: (id) => ({
-        url: `specifications/${id}/`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [{ type: 'Specification', id: 'MINE' }],
-    }),
   }),
 });
 

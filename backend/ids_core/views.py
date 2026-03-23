@@ -1,5 +1,4 @@
 from rest_framework import viewsets, permissions, filters, status
-from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
@@ -37,11 +36,6 @@ class SpecificationViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticatedOrReadOnly()]
         return [permissions.IsAuthenticated()]
 
-    def get_permissions(self):
-        if self.action in ('list', 'retrieve'):
-            return [permissions.IsAuthenticatedOrReadOnly()]
-        return [permissions.IsAuthenticated()]
-
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -58,7 +52,6 @@ class SpecificationViewSet(viewsets.ModelViewSet):
             raise PermissionDenied
         instance.delete()
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
         qs = self.get_queryset().filter(owner=request.user)
@@ -93,29 +86,6 @@ class SpecificationViewSet(viewsets.ModelViewSet):
         serializer.save(specification=spec)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
-            url_path='add_specification')
-    def add_specification(self, request, pk=None):
-        ids_obj = self.get_object()
-        if ids_obj.owner != request.user:
-            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
-        spec_id = request.data.get('specification_id')
-        spec = Specification.objects.filter(pk=spec_id).first()
-        if not spec:
-            return Response({'detail': 'Specification not found.'}, status=status.HTTP_404_NOT_FOUND)
-        order = ids_obj.specifications.count()
-        IDSSpecification.objects.get_or_create(ids=ids_obj, specification=spec, defaults={'order': order})
-        return Response(IDSSerializer(ids_obj, context={'request': request}).data)
-
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
-            url_path='remove_specification')
-    def remove_specification(self, request, pk=None):
-        ids_obj = self.get_object()
-        if ids_obj.owner != request.user:
-            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
-        spec_id = request.data.get('specification_id')
-        IDSSpecification.objects.filter(ids=ids_obj, specification_id=spec_id).delete()
-
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def tags(self, request, pk=None):
@@ -196,6 +166,74 @@ class IDSViewSet(viewsets.ModelViewSet):
         ids_obj.ids_tags.filter(tag=tag).delete()
         return Response({'detail': 'Tag removed.'})
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='add_specification')
+    def add_specification(self, request, pk=None):
+        ids_obj = self.get_object()
+        if ids_obj.owner != request.user:
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        spec_id = request.data.get('specification_id')
+        spec = Specification.objects.filter(pk=spec_id).first()
+        if not spec:
+            return Response({'detail': 'Specification not found.'}, status=status.HTTP_404_NOT_FOUND)
+        order = ids_obj.specifications.count()
+        IDSSpecification.objects.get_or_create(ids=ids_obj, specification=spec, defaults={'order': order})
+        return Response(IDSSerializer(ids_obj, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='remove_specification')
+    def remove_specification(self, request, pk=None):
+        ids_obj = self.get_object()
+        if ids_obj.owner != request.user:
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        spec_id = request.data.get('specification_id')
+        IDSSpecification.objects.filter(ids=ids_obj, specification_id=spec_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='copy_to_library')
+    def copy_to_library(self, request, pk=None):
+        """Copy this IDS and its specifications to the user's library."""
+        ids_obj = self.get_object()
+        user = request.user
+
+        new_ids = IDS.objects.create(
+            title=ids_obj.title,
+            copyright_text=ids_obj.copyright_text,
+            version=ids_obj.version,
+            description=ids_obj.description,
+            author_email=ids_obj.author_email,
+            date=ids_obj.date,
+            purpose=ids_obj.purpose,
+            milestone=ids_obj.milestone,
+            owner=user,
+            is_deleted=False,
+            is_public=False
+        )
+
+        for ids_spec in IDSSpecification.objects.filter(ids=ids_obj):
+            orig_spec = ids_spec.specification
+            new_spec = Specification.objects.create(
+                name=orig_spec.name,
+                ifc_version=orig_spec.ifc_version,
+                identifier=orig_spec.identifier,
+                description=orig_spec.description,
+                instructions=orig_spec.instructions,
+                applicability_data=orig_spec.applicability_data,
+                requirements_data=orig_spec.requirements_data,
+                owner=user,
+                is_deleted=False,
+                is_public=False
+            )
+            IDSSpecification.objects.create(
+                ids=new_ids,
+                specification=new_spec,
+                order=ids_spec.order,
+                is_active=ids_spec.is_active
+            )
+
+        return Response(IDSSerializer(new_ids, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
 
 class TagViewSet(viewsets.ModelViewSet):
     """
@@ -221,104 +259,6 @@ class UserLibraryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-    @action(detail=True, methods=['post'],
-            permission_classes=[permissions.IsAuthenticated])
-    def copy_to_library(self, request, pk=None):
-        """Copy this IDS and its specifications to the user's library."""
-        ids_obj = self.get_object()
-        user = request.user
-
-        # Create a copy of the IDS for the user
-        new_ids = IDS.objects.create(
-            title=ids_obj.title,
-            copyright_text=ids_obj.copyright_text,
-            version=ids_obj.version,
-            description=ids_obj.description,
-            author_email=ids_obj.author_email,
-            date=ids_obj.date,
-            purpose=ids_obj.purpose,
-            milestone=ids_obj.milestone,
-            owner=user,
-            is_deleted=False,
-            is_public=False
-        )
-
-        # Copy all specifications to the user and link them to the new IDS
-        for ids_spec in IDSSpecification.objects.filter(ids=ids_obj):
-            orig_spec = ids_spec.specification
-            # Create a copy of the specification for the user
-            new_spec = Specification.objects.create(
-                name=orig_spec.name,
-                ifc_version=orig_spec.ifc_version,
-                identifier=orig_spec.identifier,
-                description=orig_spec.description,
-                instructions=orig_spec.instructions,
-                applicability_data=orig_spec.applicability_data,
-                requirements_data=orig_spec.requirements_data,
-                owner=user,
-                is_deleted=False,
-                is_public=False
-            )
-            # Link the new specification to the new IDS
-            IDSSpecification.objects.create(
-                ids=new_ids,
-                specification=new_spec,
-                order=ids_spec.order,
-                is_active=ids_spec.is_active
-            )
-
-        serializer = self.get_serializer(new_ids)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=['post'],
-            permission_classes=[permissions.IsAuthenticated])
-    def copy_to_library(self, request, pk=None):
-        """Copy this IDS and its specifications to the user's library."""
-        ids_obj = self.get_object()
-        user = request.user
-
-        # Create a copy of the IDS for the user
-        new_ids = IDS.objects.create(
-            title=ids_obj.title,
-            copyright_text=ids_obj.copyright_text,
-            version=ids_obj.version,
-            description=ids_obj.description,
-            author_email=ids_obj.author_email,
-            date=ids_obj.date,
-            purpose=ids_obj.purpose,
-            milestone=ids_obj.milestone,
-            owner=user,
-            is_deleted=False,
-            is_public=False
-        )
-
-        # Copy all specifications to the user and link them to the new IDS
-        for ids_spec in IDSSpecification.objects.filter(ids=ids_obj):
-            orig_spec = ids_spec.specification
-            # Create a copy of the specification for the user
-            new_spec = Specification.objects.create(
-                name=orig_spec.name,
-                ifc_version=orig_spec.ifc_version,
-                identifier=orig_spec.identifier,
-                description=orig_spec.description,
-                instructions=orig_spec.instructions,
-                applicability_data=orig_spec.applicability_data,
-                requirements_data=orig_spec.requirements_data,
-                owner=user,
-                is_deleted=False,
-                is_public=False
-            )
-            # Link the new specification to the new IDS
-            IDSSpecification.objects.create(
-                ids=new_ids,
-                specification=new_spec,
-                order=ids_spec.order,
-                is_active=ids_spec.is_active
-            )
-
-        serializer = self.get_serializer(new_ids)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SearchView(viewsets.ViewSet):
