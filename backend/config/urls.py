@@ -15,9 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve as static_serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,8 +25,12 @@ urlpatterns = [
     path('api/', include('ids_core.urls')),
 ]
 
-# Serve media & avatar files
-# In production Docker, nginx proxies these paths to the backend;
-# whitenoise handles /static/ so we only need media & avatars here.
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += static('/avatars/', document_root=settings.BASE_DIR / 'assets' / 'avatars')
+# Serve media & avatar files regardless of DEBUG mode.
+# In the Docker setup nginx proxies /media/ and /avatars/ to the backend,
+# so Django must handle these paths even in production.  The helper
+# django.conf.urls.static.static() silently returns [] when DEBUG=False,
+# so we wire the patterns directly with re_path + static_serve.
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', static_serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^avatars/(?P<path>.*)$', static_serve, {'document_root': settings.BASE_DIR / 'assets' / 'avatars'}),
+]

@@ -184,3 +184,21 @@ else:
     ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = ['Content-Disposition']
+
+
+# ---------------------------------------------------------------------------
+# Reverse-proxy / Cloudflare tunnel settings
+# ---------------------------------------------------------------------------
+# Trust the X-Forwarded-Proto header set by nginx / cloudflared so Django
+# knows the original request was HTTPS.  Without this, Django builds an
+# http:// origin while the browser sends an https:// Origin header, making
+# django-cors-headers treat every API call as cross-origin and reject it.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+# CSRF trusted origins – required for Django admin through a reverse proxy.
+# Set CSRF_TRUSTED_ORIGINS=https://myapp.example.com in the environment.
+_csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+if _csrf_env:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()]

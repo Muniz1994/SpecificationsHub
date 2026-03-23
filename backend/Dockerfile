@@ -15,7 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 COPY . .
 
-RUN chmod +x entrypoint.sh
+# Fix potential Windows (CRLF) line endings and make executable
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 EXPOSE 8000
 
