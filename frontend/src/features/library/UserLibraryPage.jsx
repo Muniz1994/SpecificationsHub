@@ -5,23 +5,23 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import LibrarySidebar from '@/features/library/LibrarySidebar';
-import { useGetMyIDSQuery, useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import { useGetIDSDetailQuery } from '@/features/ids/idsApi';
+import { useGetLibraryQuery, useRemoveFromLibraryMutation } from '@/features/library/libraryApi';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-function IDSDetail({ idsId }) {
-  const { data: ids, isLoading } = useGetIDSDetailQuery(idsId, {
-    skip: !idsId,
-  });
+function IDSDetail({ idsId, onRemove }) {
+  const { data: ids, isLoading } = useGetIDSDetailQuery(idsId, { skip: !idsId });
   const [selectedSpec, setSelectedSpec] = useState(null);
 
   if (!idsId)
     return (
       <p className="text-muted-foreground mt-10 text-center">
-        Select an IDS from the sidebar.
+        Select an item from the sidebar.
       </p>
     );
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
@@ -32,6 +32,12 @@ function IDSDetail({ idsId }) {
       <div className="flex items-baseline gap-3 mb-4">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+        {ids.tags && ids.tags.map((tag) => (
+          <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
+        ))}
+        <Button variant="ghost" size="sm" className="ml-auto text-destructive" onClick={onRemove}>
+          Remove from library
+        </Button>
       </div>
 
       <Card className="mb-6">
@@ -71,10 +77,21 @@ function IDSDetail({ idsId }) {
 }
 
 export default function UserLibraryPage() {
-  const { data } = useGetMyIDSQuery();
-  const [selectedIdsId, setSelectedIdsId] = useState(null);
+  const { data: libraryData } = useGetLibraryQuery();
+  const [removeFromLibrary] = useRemoveFromLibraryMutation();
+  const [selectedEntryId, setSelectedEntryId] = useState(null);
 
-  const idsList = data?.results || data || [];
+  const entries = libraryData?.results || libraryData || [];
+  const idEntries = entries.filter((e) => e.ids != null);
+  const idsList = idEntries.map((e) => ({ ...e.ids_detail, _libraryId: e.id }));
+
+  const selectedEntry = idEntries.find((e) => e.ids_detail?.id === selectedEntryId);
+
+  const handleRemove = async () => {
+    if (!selectedEntry) return;
+    await removeFromLibrary(selectedEntry.id);
+    setSelectedEntryId(null);
+  };
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh)] -m-6">
