@@ -36,6 +36,7 @@ export const specificationsApi = api.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Specification', id },
         { type: 'Specification', id: 'LIST' },
+        { type: 'Specification', id: 'MINE' },
       ],
     }),
 

@@ -12,7 +12,10 @@ export const idsApi = api.injectEndpoints({
 
     getIDSDetail: builder.query({
       query: (id) => `ids/${id}/`,
-      providesTags: (result, error, id) => [{ type: 'IDS', id }],
+      providesTags: (result, error, id) => [
+        { type: 'IDS', id },
+        ...(result?.specifications || []).map((s) => ({ type: 'Specification', id: s.id })),
+      ],
     }),
 
     getMyIDS: builder.query({

@@ -1,11 +1,12 @@
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, CheckSquare, Filter } from 'lucide-react';
+import { Pencil, CheckSquare, Filter, X } from 'lucide-react';
+import { useGetSpecificationDetailQuery } from './specificationsApi';
 
 function FacetPill({ f }) {
   const label = f.type ? f.type.charAt(0).toUpperCase() + f.type.slice(1) : '?';
@@ -43,16 +44,20 @@ function FacetPanel({ title, icon: Icon, facets, emptyText }) {
   );
 }
 
-export default function SpecificationModal({ spec, onClose, onEdit }) {
+export default function SpecificationModal({ spec: specProp, onClose, onEdit }) {
+  const specId = specProp?.id;
+  const { data: fullSpec } = useGetSpecificationDetailQuery(specId, { skip: !specId });
+  const spec = fullSpec || specProp;
+
   const applicability = Array.isArray(spec?.applicability_data) ? spec.applicability_data : [];
   const requirements = Array.isArray(spec?.requirements_data) ? spec.requirements_data : [];
 
   return (
-    <Dialog open={!!spec} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-[60vw] sm:max-w-[95vw] w-[60vw] p-0 gap-0 max-h-[60vh] overflow-hidden">
+    <Dialog open={!!specProp} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent showCloseButton={false} className="max-w-[60vw] sm:max-w-[95vw] w-[60vw] p-0 gap-0 max-h-[60vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-6 px-6 pt-5 pb-4 border-b">
+          <div className="min-w-0 flex-1">
             <DialogTitle className="text-xl leading-tight">{spec?.name}</DialogTitle>
             <DialogDescription className="sr-only">Specification details</DialogDescription>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -63,11 +68,19 @@ export default function SpecificationModal({ spec, onClose, onEdit }) {
               ))}
             </div>
           </div>
-          {onEdit && spec && (
-            <Button variant="outline" size="sm" className="shrink-0" onClick={() => onEdit(spec)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {onEdit && spec && (
+              <Button variant="outline" size="sm" onClick={() => onEdit(spec)}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+              </Button>
+            )}
+            <DialogClose asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </DialogClose>
+          </div>
         </div>
 
         {spec && (
