@@ -96,7 +96,7 @@ function IDSDetail({ idsId, onRemove }) {
         <div className="ml-auto flex gap-2">
           {isOwner && (
             <Button variant="outline" size="sm" onClick={() => setShowEditIDS(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit IDS
+              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit IDS info
             </Button>
           )}
           <Button variant="ghost" size="sm" className="text-destructive" onClick={onRemove}>

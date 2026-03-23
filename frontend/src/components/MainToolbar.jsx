@@ -33,7 +33,7 @@ export default function MainToolbar() {
 
   const toolButtons = [
     { icon: Library, path: '/library', title: 'User Library' },
-    { icon: Pencil, path: '/editor', title: 'IDS Editor' },
+    //{ icon: Pencil, path: '/editor', title: 'IDS Editor' },
     
   ];
 
@@ -73,6 +73,7 @@ export default function MainToolbar() {
               <Button
                 variant={location.pathname === btn.path ? 'default' : 'ghost'}
                 size="icon"
+                disabled={btn.path === '/editor'}
                 onClick={() => navigate(btn.path)}
               >
                 <btn.icon className="h-4 w-4" />
