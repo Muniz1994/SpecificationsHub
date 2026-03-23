@@ -23,6 +23,10 @@ import {
   useUnendorseIDSMutation,
 } from '@/features/ids/idsApi';
 
+const BACKEND_BASE = import.meta.env.VITE_API_BASE_URL
+  ? ''
+  : 'http://localhost:8000';
+
 export default function IDSCard({ ids }) {
   const navigate = useNavigate();
   const [copyIDS, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
@@ -86,7 +90,7 @@ export default function IDSCard({ ids }) {
                 <TooltipTrigger asChild>
                   <Avatar className="h-6 w-6 cursor-default">
                     {ids.owner_avatar_url && (
-                      <AvatarImage src={`http://localhost:8000${ids.owner_avatar_url}`} alt={ids.owner_username} />
+                      <AvatarImage src={`${BACKEND_BASE}${ids.owner_avatar_url}`} alt={ids.owner_username} />
                     )}
                     <AvatarFallback className="text-[10px]">
                       {ids.owner_username.charAt(0).toUpperCase()}

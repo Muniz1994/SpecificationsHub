@@ -10,7 +10,7 @@
  */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const BASE_URL = 'http://localhost:8000/api/';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
 
 // -------------------------------------------------------------------
 // Base query – attaches the JWT access token to every request

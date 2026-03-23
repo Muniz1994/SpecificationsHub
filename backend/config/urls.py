@@ -25,8 +25,8 @@ urlpatterns = [
     path('api/', include('ids_core.urls')),
 ]
 
-# Serve media files during development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # Serve avatar assets
-    urlpatterns += static('/avatars/', document_root=settings.BASE_DIR / 'assets' / 'avatars')
+# Serve media & avatar files
+# In production Docker, nginx proxies these paths to the backend;
+# whitenoise handles /static/ so we only need media & avatars here.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static('/avatars/', document_root=settings.BASE_DIR / 'assets' / 'avatars')

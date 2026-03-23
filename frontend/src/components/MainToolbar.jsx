@@ -21,6 +21,10 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FileText, Layers, PenTool, Library, User, LogOut, Pencil } from 'lucide-react';
 
+const BACKEND_BASE = import.meta.env.VITE_API_BASE_URL
+  ? ''
+  : 'http://localhost:8000';
+
 export default function MainToolbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,7 +98,7 @@ export default function MainToolbar() {
             <Button variant="ghost" size="icon" className="rounded-full">
               {user?.avatar_url ? (
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={`http://localhost:8000${user.avatar_url}`} alt="Avatar" />
+                  <AvatarImage src={`${BACKEND_BASE}${user.avatar_url}`} alt="Avatar" />
                   <AvatarFallback className="text-xs">
                     {user.first_name?.[0] || user.username?.[0] || '?'}
                   </AvatarFallback>

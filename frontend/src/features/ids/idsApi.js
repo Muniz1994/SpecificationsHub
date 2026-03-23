@@ -157,7 +157,9 @@ export const {
  * Uses fetch directly because RTK Query isn't designed for blob downloads.
  */
 export async function downloadIDSFile(id, accessToken) {
-  const res = await fetch(`http://localhost:8000/api/ids/${id}/download/`, {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
+  const url = new URL(`ids/${id}/download/`, new URL(base, window.location.origin)).href;
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {
@@ -168,12 +170,12 @@ export async function downloadIDSFile(id, accessToken) {
   const disposition = res.headers.get('Content-Disposition') || '';
   const match = disposition.match(/filename="?([^"]+)"?/);
   const filename = match ? match[1] : 'ids.ids';
-  const url = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = blobUrl;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(blobUrl);
 }

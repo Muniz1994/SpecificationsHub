@@ -22,6 +22,10 @@ import {
   useUnendorseSpecificationMutation,
 } from '@/features/specifications/specificationsApi';
 
+const BACKEND_BASE = import.meta.env.VITE_API_BASE_URL
+  ? ''
+  : 'http://localhost:8000';
+
 const AVATAR_COLORS = [
   '#6b8e8e', // muted teal
   '#8e6b6b', // muted rose
@@ -116,7 +120,7 @@ export default function SpecificationCard({ spec, onClick, hideAddButton = false
                 <TooltipTrigger asChild>
                   <Avatar size="md" className="cursor-default" style={{ backgroundColor: getAvatarColor(spec.owner_username) }}>
                     {spec.owner_avatar_url && (
-                      <AvatarImage src={`http://localhost:8000${spec.owner_avatar_url}`} alt={spec.owner_username} />
+                      <AvatarImage src={`${BACKEND_BASE}${spec.owner_avatar_url}`} alt={spec.owner_username} />
                     )}
                     <AvatarFallback style={{ backgroundColor: getAvatarColor(spec.owner_username), color: '#fff' }}>
                       {spec.owner_username.charAt(0).toUpperCase()}

@@ -15,7 +15,9 @@ import {
 } from '@/components/ui/dialog';
 import { BadgeCheck, Pencil, Check } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? new URL(import.meta.env.VITE_API_BASE_URL, window.location.origin).origin
+  : 'http://localhost:8000';
 
 export default function UserInfoPage() {
   const user = useSelector(selectCurrentUser);
