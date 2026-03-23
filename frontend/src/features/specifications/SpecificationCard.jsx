@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useCopySpecificationToLibraryMutation } from '@/features/specifications/specificationsApi';
 
-export default function SpecificationCard({ spec, onClick }) {
+export default function SpecificationCard({ spec, onClick, hideAddButton = false }) {
   const [copySpec, { isLoading: isCopying }] = useCopySpecificationToLibraryMutation();
   const [copied, setCopied] = useState(false);
 
@@ -66,14 +66,16 @@ export default function SpecificationCard({ spec, onClick }) {
             </Tooltip>
           )}
         </div>
-        <Button
-          variant={copied ? 'default' : 'outline'}
-          size="sm"
-          disabled={isCopying}
-          onClick={handleGetIt}
-        >
-          {copied ? 'Added!' : isCopying ? '…' : 'Add to Library'}
-        </Button>
+        {!hideAddButton && (
+          <Button
+            variant={copied ? 'default' : 'outline'}
+            size="sm"
+            disabled={isCopying}
+            onClick={handleGetIt}
+          >
+            {copied ? 'Added!' : isCopying ? '…' : 'Add to Library'}
+          </Button>
+        )}
       </CardContent>
       {spec.owner_username && (
         <CardFooter className="text-xs text-muted-foreground pt-0">

@@ -138,7 +138,7 @@ function IDSDetail({ idsId, onRemove }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {ids.specifications && ids.specifications.length > 0 ? (
             ids.specifications.map((spec) => (
-              <SpecificationCard key={spec.id} spec={spec} onClick={setSelectedSpec} />
+              <SpecificationCard key={spec.id} spec={spec} onClick={setSelectedSpec} hideAddButton={true} />
             ))
           ) : (
             <p className="text-muted-foreground italic">No specifications.</p>
