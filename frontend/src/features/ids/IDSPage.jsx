@@ -3,78 +3,29 @@ import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import SpecificationCard from '@/features/specifications/SpecificationCard';
 import SpecificationModal from '@/features/specifications/SpecificationModal';
-import SpecificationForm from '@/features/specifications/SpecificationForm';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 import {
   useGetIDSDetailQuery,
-  useAddSpecificationToIDSMutation,
   useRemoveSpecificationFromIDSMutation,
   useCopyIDSToLibraryMutation,
 } from '@/features/ids/idsApi';
-import { useGetMySpecificationsQuery } from '@/features/specifications/specificationsApi';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import IDSForm from '@/features/ids/IDSForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-
-function AddSpecificationDialog({ idsId, existingIds, open, onClose }) {
-  const { data } = useGetMySpecificationsQuery();
-  const [addSpec] = useAddSpecificationToIDSMutation();
-  const mySpecs = (data?.results || data || []).filter(
-    (s) => !existingIds.includes(s.id)
-  );
-
-  const handleAdd = async (specId) => {
-    await addSpec({ idsId, specificationId: specId });
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Specification</DialogTitle>
-          <DialogDescription>Choose one of your specifications to add to this IDS.</DialogDescription>
-        </DialogHeader>
-        {mySpecs.length === 0
-          ? <p className="text-sm text-muted-foreground italic">No specifications available. Create one first.</p>
-          : (
-            <ul className="space-y-2 max-h-80 overflow-y-auto">
-              {mySpecs.map((spec) => (
-                <li key={spec.id}
-                  className="flex items-center justify-between rounded-md border px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium">{spec.name}</p>
-                    <p className="text-xs text-muted-foreground">{spec.ifc_version}</p>
-                  </div>
-                  <Button size="sm" onClick={() => handleAdd(spec.id)}>Add</Button>
-                </li>
-              ))}
-            </ul>
-          )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 
 export default function IDSPage() {
   const { id } = useParams();
   const { data: ids, isLoading, error } = useGetIDSDetailQuery(id);
   const currentUser = useSelector(selectCurrentUser);
   const [removeSpec] = useRemoveSpecificationFromIDSMutation();
-   const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+  const [copyIDSToLibrary, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
 
   const [selectedSpec, setSelectedSpec] = useState(null);
-  const [editSpec, setEditSpec] = useState(null);
-  const [showEditIDS, setShowEditIDS] = useState(false);
-  const [showAddSpec, setShowAddSpec] = useState(false);
-  const [showNewSpec, setShowNewSpec] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
@@ -82,7 +33,6 @@ export default function IDSPage() {
   if (!ids) return null;
 
   const isOwner = currentUser && ids.owner === currentUser.id;
-  const existingSpecIds = (ids.specifications || []).map((s) => s.id);
 
   const handleRemoveSpec = async (specId) => {
     await removeSpec({ idsId: ids.id, specificationId: specId });
@@ -101,9 +51,14 @@ export default function IDSPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-baseline gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">{ids.title}</h1>
         {ids.version && <Badge variant="secondary">v{ids.version}</Badge>}
+        {!isOwner && (
+          <Button size="sm" className="ml-auto" onClick={() => setShowConfirmModal(true)}>
+            Get IDS
+          </Button>
+        )}
       </div>
 
       <Card className="mb-8">
@@ -124,21 +79,9 @@ export default function IDSPage() {
       <Separator className="my-6" />
 
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">
-            Specifications ({ids.specifications?.length || 0})
-          </h2>
-          {isOwner && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowAddSpec(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add Existing
-              </Button>
-              <Button size="sm" onClick={() => setShowNewSpec(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1" /> New Specification
-              </Button>
-            </div>
-          )}
-        </div>
+        <h2 className="text-xl font-semibold mb-4">
+          Specifications ({ids.specifications?.length || 0})
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ids.specifications && ids.specifications.length > 0 ? (
@@ -162,45 +105,18 @@ export default function IDSPage() {
         </div>
       </section>
 
-      <SpecificationModal
-        spec={selectedSpec}
-        onClose={() => setSelectedSpec(null)}
-        onEdit={isOwner ? (s) => { setSelectedSpec(null); setEditSpec(s); } : undefined}
-      />
-
-      <SpecificationForm
-        open={showNewSpec || !!editSpec}
-        onClose={() => { setShowNewSpec(false); setEditSpec(null); }}
-        initial={editSpec}
-      />
-
-      <IDSForm
-        open={showEditIDS}
-        onClose={() => setShowEditIDS(false)}
-        initial={ids}
-      />
-
-      <AddSpecificationDialog
-        idsId={ids.id}
-        existingIds={existingSpecIds}
-        open={showAddSpec}
-        onClose={() => setShowAddSpec(false)}
-      />
+      <SpecificationModal spec={selectedSpec} onClose={() => setSelectedSpec(null)} />
 
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add IDS to Library</DialogTitle>
             <DialogDescription>
-              A local copy of this IDS and all its specifications will be added to your library. You'll be able to access them anytime in your User Library.
+              A local copy of this IDS and all its specifications will be added to your library.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowConfirmModal(false)}
-              disabled={isCopying}
-            >
+            <Button variant="outline" onClick={() => setShowConfirmModal(false)} disabled={isCopying}>
               Cancel
             </Button>
             <Button onClick={handleGetIDS} disabled={isCopying}>

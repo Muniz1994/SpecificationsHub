@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import { useDeleteIDSMutation, useDeleteIDSWithSpecificationsMutation } from '@/features/ids/idsApi';
 import { useGetMySpecificationsQuery, useDeleteSpecificationMutation } from '@/features/specifications/specificationsApi';
 import {
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selectedSpec, onSelectSpec }) {
+export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selectedSpec, onSelectSpec, onNewIDS, onNewSpec }) {
   const [activeTab, setActiveTab] = useState('ids');
   const [deleteIDS, { isLoading: isDeletingIDS }] = useDeleteIDSMutation();
   const [deleteIDSWithSpecs, { isLoading: isDeletingIDSWithSpecs }] = useDeleteIDSWithSpecificationsMutation();
@@ -57,7 +57,7 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
   };
   return (
     <aside className="min-h-full shrink-0 border-r bg-card p-4 flex flex-col">
-      <div className="flex gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4">
         <Button
           variant={activeTab === 'ids' ? 'default' : 'outline'}
           size="sm"
@@ -71,6 +71,15 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
           onClick={() => setActiveTab('specs')}
         >
           My Specifications
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 ml-auto"
+          title={activeTab === 'ids' ? 'New IDS' : 'New Specification'}
+          onClick={activeTab === 'ids' ? onNewIDS : onNewSpec}
+        >
+          <Plus className="h-4 w-4" />
         </Button>
       </div>
       <Separator className="mb-3" />
