@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
-import { useDeleteIDSMutation } from '@/features/ids/idsApi';
+import { useDeleteIDSMutation, useDeleteIDSWithSpecificationsMutation } from '@/features/ids/idsApi';
 import { useGetMySpecificationsQuery, useDeleteSpecificationMutation } from '@/features/specifications/specificationsApi';
 import {
   Dialog,
@@ -18,17 +19,20 @@ import {
 export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selectedSpec, onSelectSpec }) {
   const [activeTab, setActiveTab] = useState('ids');
   const [deleteIDS, { isLoading: isDeletingIDS }] = useDeleteIDSMutation();
+  const [deleteIDSWithSpecs, { isLoading: isDeletingIDSWithSpecs }] = useDeleteIDSWithSpecificationsMutation();
   const [deleteSpec, { isLoading: isDeletingSpec }] = useDeleteSpecificationMutation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedIDSToDelete, setSelectedIDSToDelete] = useState(null);
+  const [alsoDeleteSpecs, setAlsoDeleteSpecs] = useState(false);
   const { data: specsData } = useGetMySpecificationsQuery();
   const mySpecs = Array.isArray(specsData) ? specsData : specsData?.results || [];
 
-  const isDeleting = isDeletingIDS || isDeletingSpec;
+  const isDeleting = isDeletingIDS || isDeletingIDSWithSpecs || isDeletingSpec;
 
   const handleDeleteClick = (e, item) => {
     e.stopPropagation();
     setSelectedIDSToDelete(item);
+    setAlsoDeleteSpecs(false);
     setShowDeleteModal(true);
   };
 
@@ -38,11 +42,14 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
       const isSpec = !selectedIDSToDelete.title;
       if (isSpec) {
         await deleteSpec(selectedIDSToDelete.id).unwrap();
+      } else if (alsoDeleteSpecs) {
+        await deleteIDSWithSpecs(selectedIDSToDelete.id).unwrap();
       } else {
         await deleteIDS(selectedIDSToDelete.id).unwrap();
       }
       setShowDeleteModal(false);
       setSelectedIDSToDelete(null);
+      setAlsoDeleteSpecs(false);
     } catch (err) {
       alert('Failed to delete item. Please try again.');
       console.error(err);
@@ -144,9 +151,21 @@ export default function LibrarySidebar({ idsList, selectedId, onSelectIDS, selec
           <DialogHeader>
             <DialogTitle>Delete {selectedIDSToDelete?.title ? 'IDS' : 'Specification'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedIDSToDelete?.title || selectedIDSToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete &ldquo;{selectedIDSToDelete?.title || selectedIDSToDelete?.name}&rdquo;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          {selectedIDSToDelete?.title && (
+            <div className="flex items-center gap-2 py-2">
+              <Checkbox
+                id="delete-specs"
+                checked={alsoDeleteSpecs}
+                onCheckedChange={(checked) => setAlsoDeleteSpecs(!!checked)}
+              />
+              <label htmlFor="delete-specs" className="text-sm cursor-pointer">
+                Also delete all its specifications
+              </label>
+            </div>
+          )}
           <DialogFooter>
             <Button
               variant="outline"

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -7,9 +8,24 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useCopyIDSToLibraryMutation } from '@/features/ids/idsApi';
 
 export default function IDSCard({ ids }) {
   const navigate = useNavigate();
+  const [copyIDS, { isLoading: isCopying }] = useCopyIDSToLibraryMutation();
+  const [copied, setCopied] = useState(false);
+
+  const handleGetIt = async (e) => {
+    e.stopPropagation();
+    try {
+      await copyIDS(ids.id).unwrap();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // silently ignore
+    }
+  };
 
   return (
     <Card
@@ -43,13 +59,25 @@ export default function IDSCard({ ids }) {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between text-xs text-muted-foreground">
-        {ids.owner_username && <span>by {ids.owner_username}</span>}
-        {ids.specifications_count != null && (
-          <span>
-            {ids.specifications_count} spec{ids.specifications_count !== 1 ? 's' : ''}
-          </span>
-        )}
+      <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
+        <div>
+          {ids.owner_username && <span>by {ids.owner_username}</span>}
+        </div>
+        <div className="flex items-center gap-3">
+          {ids.specifications_count != null && (
+            <span>
+              {ids.specifications_count} spec{ids.specifications_count !== 1 ? 's' : ''}
+            </span>
+          )}
+          <Button
+            variant={copied ? 'default' : 'outline'}
+            size="sm"
+            disabled={isCopying}
+            onClick={handleGetIt}
+          >
+            {copied ? 'Added!' : isCopying ? '…' : 'Get it!'}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

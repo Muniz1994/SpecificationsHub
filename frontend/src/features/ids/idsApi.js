@@ -63,7 +63,10 @@ export const idsApi = api.injectEndpoints({
         url: `ids/${id}/copy_to_library/`,
         method: 'POST',
       }),
-      invalidatesTags: [{ type: 'IDS', id: 'MINE' }],
+      invalidatesTags: [
+        { type: 'IDS', id: 'MINE' },
+        { type: 'Specification', id: 'MINE' },
+      ],
     }),
 
     // Delete IDS
@@ -73,6 +76,18 @@ export const idsApi = api.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: [{ type: 'IDS', id: 'MINE' }],
+    }),
+
+    // Delete IDS and all its owned specifications
+    deleteIDSWithSpecifications: builder.mutation({
+      query: (id) => ({
+        url: `ids/${id}/delete_with_specifications/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [
+        { type: 'IDS', id: 'MINE' },
+        { type: 'Specification', id: 'MINE' },
+      ],
     }),
   }),
 });
@@ -88,4 +103,5 @@ export const {
   useSearchQuery,
   useCopyIDSToLibraryMutation,
   useDeleteIDSMutation,
+  useDeleteIDSWithSpecificationsMutation,
 } = idsApi;

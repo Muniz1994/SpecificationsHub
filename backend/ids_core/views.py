@@ -162,6 +162,18 @@ class IDSViewSet(viewsets.ModelViewSet):
             raise PermissionDenied
         instance.delete()
 
+    @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated],
+            url_path='delete_with_specifications')
+    def delete_with_specifications(self, request, pk=None):
+        ids_obj = self.get_object()
+        if ids_obj.owner != request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        spec_ids = IDSSpecification.objects.filter(ids=ids_obj).values_list('specification_id', flat=True)
+        Specification.objects.filter(id__in=spec_ids, owner=request.user).delete()
+        ids_obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
         qs = self.get_queryset().filter(owner=request.user)
