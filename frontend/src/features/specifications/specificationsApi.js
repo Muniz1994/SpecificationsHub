@@ -46,6 +46,11 @@ export const specificationsApi = api.injectEndpoints({
         { type: 'Specification', id: 'MINE' },
       ],
     }),
+
+    copySpecificationToLibrary: builder.mutation({
+      query: (id) => ({ url: `specifications/${id}/copy_to_library/`, method: 'POST' }),
+      invalidatesTags: [{ type: 'Specification', id: 'MINE' }],
+    }),
   }),
 });
 
@@ -56,4 +61,5 @@ export const {
   useCreateSpecificationMutation,
   useUpdateSpecificationMutation,
   useDeleteSpecificationMutation,
+  useCopySpecificationToLibraryMutation,
 } = specificationsApi;

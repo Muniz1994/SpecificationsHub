@@ -102,6 +102,26 @@ class SpecificationViewSet(viewsets.ModelViewSet):
         spec.specification_tags.filter(tag=tag).delete()
         return Response({'detail': 'Tag removed.'})
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='copy_to_library')
+    def copy_to_library(self, request, pk=None):
+        """Copy this specification to the user's private library."""
+        orig = self.get_object()
+        new_spec = Specification.objects.create(
+            name=orig.name,
+            ifc_version=orig.ifc_version,
+            identifier=orig.identifier,
+            description=orig.description,
+            instructions=orig.instructions,
+            applicability_data=orig.applicability_data,
+            requirements_data=orig.requirements_data,
+            owner=request.user,
+            is_deleted=False,
+            is_public=False,
+        )
+        return Response(SpecificationSerializer(new_spec, context={'request': request}).data,
+                        status=status.HTTP_201_CREATED)
+
 
 class IDSViewSet(viewsets.ModelViewSet):
     """
